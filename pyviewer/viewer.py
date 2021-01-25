@@ -1,3 +1,4 @@
+
 import sys, pygame 
 from pygame.locals import * # Local Key Value and Mod Constant initialize
 import numpy as np 
@@ -8,8 +9,15 @@ from OpenGL.GL import *
 
 from OpenGL.GLU import *
 
+import viewcontrolobj as vco
+#CUSTOM SETTINGS.
+# from pyviewer.viewcontrolobj import  (Light, Material)
 
-logging.basicConfig(level=logging.DEBUG)
+
+
+logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.DEBUG)
+
 logger = logging.getLogger("Viewer Logger")
 
 
@@ -145,7 +153,14 @@ class Viewer():
         pygame.display.set_caption(self.title)
 
         glClearColor(0.,0.,0.,0.)
-        glShadeModel(GL_FLAT)
+        # glShadeModel(GL_FLAT)
+        self.light = vco.Light()
+        self.light.initialize()
+      
+
+        self.material = vco.Material()
+        self.material.initialize()
+        self.material()
 
 
 
@@ -176,11 +191,24 @@ class Viewer():
     
     def __tmp_render_function(self, V=None, F = None):
         (V, F) = self.data[0]
+        def calc_face_normal(idx1, idx2, idx3):
+            # print("idx is {} {} {} ".format(idx1, idx2, idx3))
+            edge1 = V[idx2] - V[idx1]
+            edge2 = V[idx3] - V[idx1]
+            normal_vector = np.cross(edge1, edge2)
+            glNormal3fv(list(normal_vector))
+            
         
-        glRotatef(1.0,1.0,0.,0)
+        
+        glRotatef(1.0,.0,1.,0)
+        glRotatef(0.5,.1,0.,0)
+
         glBegin(GL_TRIANGLES)
+
         for face_v_idx in F:
+            calc_face_normal(*face_v_idx)
             for v_idx in face_v_idx:
+                
                 glVertex3fv(list(V[v_idx]))
         glEnd()
 

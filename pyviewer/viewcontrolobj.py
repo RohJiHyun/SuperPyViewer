@@ -1,13 +1,17 @@
 import numpy as np 
+from OpenGL.GL import * 
+from OpenGL.GLU import *
 
 
 # NEED GL BUILDER 
 class Light():
-    def __init__(self, ambient, diffuse, specular):
+    def __init__(self):
+        self.position = [5.0, 6.0, 0.0, 0.0]
         self.direcion = [0., 0., -1.]
-        self.set_ambient(ambient)
-        self.set_diffuse(diffuse)
-        self.set_specular(specular)
+        self.set_ambient([1.0, 1.0, 1.0, 0.0])
+        self.set_diffuse([1.0, 1.0, 1.0, 0.0])
+        self.set_specular([1.0, 1.0, 1.0, 0.0])
+        self.set_coeff()
 
     
 
@@ -31,18 +35,34 @@ class Light():
         return self
     
     def initialize(self):
-
-        glLightfv(GL_LGIHT0, GL_AMBIENT, self.ambient)
-        glLightfv(GL_LGIHT0, GL_DIFFUSE, self.diffuse)
-        glLightfv(GL_LGIHT0, GL_SPECULAR, self.specular)
-        #glLightfv(GL_LGIHT0, GL_POSITION, self.position)
-
+        glClearColor(0.,0.,0.,0.)
+        glClearDepth(1.0)
+        glEnable(GL_CULL_FACE)
+        glFrontFace(GL_CCW)
+        glEnable(GL_NORMALIZE)
+        glEnable(GL_DEPTH_TEST)
         glEnable(GL_LIGHTING)
         glEnable(GL_LIGHT0)
 
+        glLightfv(GL_LIGHT0, GL_AMBIENT, self.ambient)
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, self.diffuse)
+        glLightfv(GL_LIGHT0, GL_SPECULAR, self.specular)
+        glLightfv(GL_LIGHT0, GL_POSITION, self.position)
+
+
+    
+    def __call__(self):
+        pass
+
 class Material():
     def __init__(self):
-        pass
+        self.set_ambient([0.2, 0.2 , 0.2 , 0.0])
+        # self.set_ambient([1., 1. , 1. , 0.0])
+        self.set_diffuse([0.6 , 0.6, 0.6, 0.0])
+        self.set_specular([0.2, 0.2, 0.2, 0.0])
+        self.set_emission([0.0, 0.0, 0.0, 0.0])
+        self.set_emission([1.0, 0.0, 1.0, 0.0])
+        self.set_shininess([0.0])
 
     def set_ambient(self, ambient):
         self.ambient = ambient
@@ -57,18 +77,28 @@ class Material():
     def set_shininess(self, shininess):
         self.shininess = shininess
         return self
+    def set_emission(self, emission):
+        self.emission = emission
     
 
     def initialize(self):
         pass
-    
 
     def __call__(self):
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, self.ambient)
-        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, self.diffuse)
-        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, self.specular)
-        glMaterialfv(GL_FRONT_AND_BACK)
-        glMaterialfv(GL_FRONT_AND_BACK)
+        # glEnable(GL_COLOR_MATERIAL)
+        
+        # disable it. for using glMatrialfv function. not glcolor
+        # see also https://www.khronos.org/opengl/wiki/File:Opengl_lighting_flowchart.png
+        glDisable(GL_COLOR_MATERIAL)
+        
+        
+        
+        # glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, self.ambient + self.diffuse)
+        glMaterialfv(GL_FRONT, GL_AMBIENT, self.ambient)
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, self.diffuse)
+        glMaterialfv(GL_FRONT, GL_SPECULAR, self.specular)
+        glMaterialfv(GL_FRONT, GL_SHININESS, self.shininess)
+        glMaterialfv(GL_FRONT, GL_EMISSION, self.emission)
         
 
 class VCOCollection():
@@ -80,7 +110,7 @@ class VCOCollection():
     """
     def __init__(self):
         self.cam_list = []
-        self.
+        # self.
     
 
     def read_default_yaml(self, file_name):
@@ -110,7 +140,7 @@ class RootWindow():
         
         
     def _set_xywh(self, x, y, width, height):
-        cond_function = labmda x : x > 0
+        cond_function = lambda x : x > 0
         def _set_attribute(x, func):
             if func(x):
                 return x
@@ -164,7 +194,7 @@ class Window():
         
         
     def _set_xywh(self, x, y, width, height):
-        cond_function = labmda x : x > 0
+        cond_function = lambda x : x > 0
         def _set_attribute(x, func):
             if func(x):
                 return x
@@ -181,9 +211,10 @@ class Camera():
     
     CAM_NUM = 0
     def __init__(self):
-        self.cam_pos = [0,0,0]
-        self.cam_direct = [0.,0.,-1.]
-        self.cam_normal_direction = [0.,1.,0.]
+        self.default_cam_pos = self.cam_pos = [0,0,0]
+        self.default_cam_direct = self.cam_direct = [0.,0.,-1.]
+        self.default_cam_normal_direction = self.cam_normal_direction = [0.,1.,0.]
+
     
     def set_name(self, name=None):
         if name == None : 
@@ -201,6 +232,10 @@ class Camera():
         self.cam_pos += delta_y
         self.cam_pos += delta_z
     
+    def rotate(self, angle, axis):
+        pass
+        return self
+    
     def set_direction(self, x, y, z):
         if not [(self.cam_pos[x] + self.cam_pos[y] +self.cam_pos[z] - x - y - z) == 0 ]:
             self.cam_direct[x] = x 
@@ -208,7 +243,8 @@ class Camera():
             self.cam_direct[z] = z
 
     def __call__(self):
-        return self.cam_pos, self.cam_direct, cam_normal_direction
+        gluLookat(*self.cam_pos, *self.cam_direct, *self.cam_normal_direction)
+        # return self.cam_pos, self.cam_direct, cam_normal_direction
 
 if __name__ == "__main__":
     pass
