@@ -133,10 +133,11 @@ class Viewer():
 
     def _update_callback_keys(self):
         return list(self.callback_table.keys())
+
+
     def _initialize(self):
         self._set_default_exit_callback()
         self.callback_keys = self._update_callback_keys()
-
         
         pygame.init()
         # self.screen = pygame.display.set_mode((150, 50))
@@ -144,6 +145,8 @@ class Viewer():
         pygame.display.set_caption(self.title)
 
         glClearColor(0.,0.,0.,0.)
+        glShadeModel(GL_FLAT)
+
 
 
         # Fill background
@@ -180,38 +183,34 @@ class Viewer():
             for v_idx in face_v_idx:
                 glVertex3fv(list(V[v_idx]))
         glEnd()
-    
-    def Cube(self):
-        glBegin(GL_LINES)
-        for edge in edges:
-            for vertex in edge:
-                glVertex3fv(verticies[vertex])
-        glEnd()
 
-    def _render(self):
+    def _render_object(self):
         for data_object in self.data:
             pass
         self.__tmp_render_function()
-            
+    
+
+    def _render__other_UI(self):
+        pass
 
     def launch(self):
         self._initialize()
         import time
         # do something
         self.loop_state = True
-        # glViewport(0,0,self.width, self.height)
-        # glMatrixMode(GL_PROJECTION)
-        # glLoadIdentity()
-        gluPerspective(45, (self.width/self.height), 0.1, 50.)
+        
+        gluPerspective(45, ( self.width / self.height ), 0.1, 50.)
         glTranslatef(0.,0.,-5)
-        # glMatrixMode(GL_MODELVIEW)
+        
         while self.loop_state:
             for event in pygame.event.get():
                 logger.debug("event is : {}".format(event))
                 self._event_hanler(event)
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
             # self.Cube()
-            self._render()
+            self._render_object()
+            self._render__other_UI()                
+
 
 
 
@@ -239,7 +238,7 @@ class CustomViewer(Viewer):
 
 
 if __name__ == "__main__":
-    V, F = igl.read_triangle_mesh("D:\\Project\\hobby\\2021\\pyviewer\\pyviewer\\cube.obj")
+    V, F = igl.read_triangle_mesh("./cube.obj")
     a = Viewer("title", 800, 900)
     a.set_data(V,F)
     a.launch()
