@@ -200,11 +200,10 @@ class Viewer():
             
         
         
-        glRotatef(1.0,.0,1.,0)
+        # glRotatef(1.0,.0,1.,0)
         glRotatef(0.5,.1,0.,0)
 
         glBegin(GL_TRIANGLES)
-
         for face_v_idx in F:
             calc_face_normal(*face_v_idx)
             for v_idx in face_v_idx:
