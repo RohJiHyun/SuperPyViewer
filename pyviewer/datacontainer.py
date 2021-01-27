@@ -1,8 +1,19 @@
+
+
+
+class WorldContainer():
+    def __init__(self, data):
+        pass
+
+
 class DataContainer():
+    """
+        based on local coord 
+    """
     def __init__(self):
-        self.rot_x = np.eye((3,3))
-        self.rot_y = np.eye((3,3))
-        self.rot_z = np.eye((3,3))
+        self.rot_x = 0.0
+        self.rot_y = 0.0
+        self.rot_z = 0.0
 
         self.V = None
         self.F = None
@@ -19,6 +30,9 @@ class DataContainer():
 
 
     def rotation_update(self, delta_x, delta_y, delta_z):
+        """
+            integer
+        """
         self.rot_x += delta_x
         self.rot_y += delta_y
         self.rot_z += delta_z
