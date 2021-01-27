@@ -1,5 +1,25 @@
 from operator import itemgetter, attrgetter
 import numpy as np 
+class Ray():
+    def __init__(self):
+        pass
+
+    def set_pos(self, pos):
+        self.pos = pos
+        return self
+    def set_direction(self, direcion):
+        self.direction = direcion
+        return self
+
+    def __call__(self, x):
+        """
+            x is integer
+        """
+        return self.pos + self.direction * x
+
+    
+
+
 class BaseTree():
 
     def __init__(self):  
@@ -66,6 +86,67 @@ class AABBLeaf(BaseLeaf):
     def intersect(self, otherObj):
         pass
 
+    def intersect_ray(self, ray):
+        """
+            ray := pos + direct * t
+            point inside triangle P := A + vB + wC #each A,B,C vertex point, u + v + w = 1
+            return (flag, barycentric coordinate[w, u, v])
+        """
+        e1 = self.v2 - self.v1 # let's Consdier as B
+        e2 = self.v3 - self.v1 # let's Consider as C
+        normal = np.cross(e1, e2)
+        parallelogram_area = np.linalg.norm( normal )
+        triangle_area = parallelogram / 2 
+
+        angle = normal.dot(ray.direction)
+        tmp_Epsilon = 0.00001
+        if abs(angle) < tmp_Epsilon: #if parallel ... they don't intersect.
+            return False
+        
+
+        d = normal.dot(self.v1)
+
+
+        t = ( normal.dot(ray.pos) + d ) / angle
+        if t<0 :
+            return False, None
+
+        P = ray.pos + t * ray.direction
+
+
+        e1 = self.v2-self.v1
+        vp1 = P - self.v1
+        C1 = np.cross(e1, vp1)
+
+        if normal.dot(C1) <0:
+            return False, None
+
+        e2 = self.v3 - self.v2 
+        vp2 = P - self.v2
+        C2 = np.cross(e2, vp1)
+        u = np.linalg.norm(C2) / triangle_area
+        if normal.dot(C2) < 0 :
+            return False, None
+
+        e3 = self.v1 - self.v3
+        vp3 = P - self.v2
+        C3 = np.cross(e3, vp3)
+        v = np.linalg.norm(C3) / triangle_area
+        if normal.dot(C3) < 0 :
+            return False, None
+        
+
+
+        return True, (1 - u - v , u, v)
+
+
+
+
+
+
+
+
+
     def merge(self, otehrObj):
         pass
     
@@ -95,7 +176,7 @@ class AABBTree(BaseTree):
 
 
     def insert_entity(self, V, F):
-        
+        print("initialize AABB Tree ...")
         self.V = V 
         self.F = F
         aabb_leaf_list = []
@@ -105,12 +186,13 @@ class AABBTree(BaseTree):
             aabb_leaf_list.append(AABBLeaf().add_data(f_idx, *face_v_idx))
 
 
-        self._insert(aabb_leaf_list)
-
+        self.insert_primitive(aabb_leaf_list)
+        print("AABB Tree end...")
 
 
     
-    def _insert(self, aabb_leaf_list):
+    
+    def insert_primitive(self, aabb_leaf_list):
         """ 
             recursive Method : 
             stop condtion : aabb_leaf_list is 0
@@ -140,14 +222,14 @@ class AABBTree(BaseTree):
         assert object_size > 0, "aabb_leaf_list is empty!"
         # 0~1
         if object_size <= AABBTree.MIN_OBJECTS_PER_LEAF : 
-            self.data = aabb_leaf_list[0]
+            self.data = [aabb_leaf_list[0]]
         else : 
-            tmpTree = AABBTree()
-
+            self.leftTree = AABBTree()
+            self.rightTree = AABBTree()
             aabb_leaf_list, p_k = partition(aabb_leaf_list)
-
-            self._insert(aabb_leaf_list[    : p_k ])
-            self._insert(aabb_leaf_list[p_k :     ])
+            self.leftTree.insert_primitive(aabb_leaf_list[    : p_k ])
+            self.rightTree.insert_primitive(aabb_leaf_list[p_k :     ])
+            
 
     def partition(self, aabb_leaf_list):
         """
@@ -188,6 +270,71 @@ class AABBTree(BaseTree):
     def intersect(self, otherObj):
         pass
     
+
+    def ray_intersect(self, ray):
+        """
+            return fid
+        """
+        
+        def is_intersect(ray):
+            def swap(x, y, cond = True):
+                if cond : 
+                    return y, x
+                return x,y
+            t_min_x = (self.x_min - ray.position[0]) / ray.direction[0]
+            t_max_x = (self.x_min - ray.position[0]) / ray.direction[0]
+        
+            tmin = t_min_x
+            tmax = t_max_x 
+            tmin, tmax = swap(tmin, tmax, tmin > tmax)
+
+
+
+            t_min_y = (self.y_min - ray.position[1]) / ray.direction[1]
+            t_max_y = (self.y_min - ray.position[1]) / ray.direction[1]
+            
+            t_min_y, t_max_y = swap(t_min_y, t_max_y, t_min_y > t_max_y)
+            
+            if tmin > t_max_y or t_max_y > tmax :
+                return False
+            if  t_min_y > tmin:
+                tmin = t_min_y
+            if t_max_y < tmax:
+                tmax = t_max_y
+
+            
+            t_min_z = (self.z_min - ray.position[2]) / ray.direction[2]
+            t_max_z = (self.z_min - ray.position[2]) / ray.direction[2]
+            
+            t_min_z, t_max_z = swap(t_min_z, t_max_z, t_min_z > t_max_z)
+                
+            if tmin > t_max_z or t_max_z > tmax :
+                return False
+            if  t_min_z > tmin:
+                tmin = t_min_z
+            if t_max_z < tmax:
+                tmax = t_max_z
+
+            return True
+
+        value_list = []
+        
+        if is_intersect(ray):
+            if self.data == None :
+                value_list1 = self.leftTree.ray_intersect(ray)
+                value_list2 = self.rightTree.ray_intersect(ray)
+                value_list.extend(value_list1)
+                value_list.extend(value_list2)
+            else : 
+                for leaf in self.data:
+                    
+                    inter_flag, coord = leaf.intersect_ray(ray)
+                    if inter_flag:
+                        value_list.append([leaf.f_idx, coord])
+                
+        
+        return value_list
+    
     def merge(self, otherObj):
         pass
     
@@ -202,6 +349,6 @@ class AABBTree(BaseTree):
     def test_draw(self):
         pass
 
-
+import igl
 if __name__ == "__main__":
     a = AABBLeaf()

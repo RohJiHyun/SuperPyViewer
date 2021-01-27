@@ -1,6 +1,6 @@
 
 
-
+import AABB
 class WorldContainer():
     def __init__(self, data):
         pass
@@ -18,6 +18,9 @@ class DataContainer():
         self.V = None
         self.F = None
         self.is_initialized = False
+        self.aabb = AABB.AABBTree()
+        self.aabb.insert_entity(self.V, self.F)
+
 
     def set_data(self, V, F):
         self.V = V
