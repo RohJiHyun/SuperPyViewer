@@ -1,5 +1,6 @@
 from operator import itemgetter, attrgetter
 import numpy as np 
+
 class Ray():
     def __init__(self):
         pass
@@ -10,6 +11,9 @@ class Ray():
     def set_direction(self, direcion):
         self.direction = direcion
         return self
+
+    def __str__(self):
+        return "pos : {}, dir : {}".format(self.pos, self.direction)
 
     def __call__(self, x):
         """
@@ -81,7 +85,8 @@ class AABBLeaf(BaseTree):
         return x_axis_overlaped and y_axis_overlaped and z_axis_overlaped
 
         # return True or False
-    
+    def get_centroid(self):
+        return (self.v1 + self.v2 + self.v3)/3
 
     # TODO Not Needed Now.    
     def intersect(self, otherObj):
@@ -97,18 +102,18 @@ class AABBLeaf(BaseTree):
         e2 = self.v3 - self.v1 # let's Consider as C
         normal = np.cross(e1, e2)
         parallelogram_area = np.linalg.norm( normal )
-        triangle_area = parallelogram / 2 
+        triangle_area = parallelogram_area / 2 
 
         angle = normal.dot(ray.direction)
         tmp_Epsilon = 0.00001
         if abs(angle) < tmp_Epsilon: #if parallel ... they don't intersect.
-            return False
+            return False, None
         
 
         d = normal.dot(self.v1)
 
 
-        t = ( normal.dot(ray.pos) + d ) / angle
+        t = -( normal.dot(ray.pos) + d ) / angle
         if t<0 :
             return False, None
 
@@ -124,13 +129,13 @@ class AABBLeaf(BaseTree):
 
         e2 = self.v3 - self.v2 
         vp2 = P - self.v2
-        C2 = np.cross(e2, vp1)
+        C2 = np.cross(e2, vp2)
         u = np.linalg.norm(C2) / triangle_area
         if normal.dot(C2) < 0 :
             return False, None
 
         e3 = self.v1 - self.v3
-        vp3 = P - self.v2
+        vp3 = P - self.v3
         C3 = np.cross(e3, vp3)
         v = np.linalg.norm(C3) / triangle_area
         if normal.dot(C3) < 0 :
@@ -146,7 +151,8 @@ class AABBLeaf(BaseTree):
 
 
 
-
+    def convert_eclidian_coordinate(self, w, u, v):
+        return self.v1 * w + self.v2 *w + self.v3 * v
 
     def merge(self, otehrObj):
         pass
@@ -191,9 +197,63 @@ class AABBTree(BaseTree):
         print("AABB Tree end...")
 
 
+    def _partition(self, aabb_leaf_list):
+        t_traversal_cost_const = 1
+        t_intersect_cost_const = 2
+        def cost_function(left_list, right_list):
+            
+            t_traversal_cost_const + t_intersect_cost_const*len(left_list) + t_intersect_cost_const*len(right_list)
+            return 0
+        
+        def find_lowwer_cost(idx_list):
+            pivot = 0
+            for pivot in range(len(idx_list)) : 
+                pass
+                
+
+            
+            
+
+        
+
+        def axis_base_partition(axis):
+            """
+                return sorted indice.
+            """
+            idx_list = list(range(len(aabb_leaf_list)))
+            assert axis == 0 or axis == 1 or axis == 2, "axis is out of size"
+            sorted(idx_list, key = lambda idx : aabb_leaf_list[idx].get_centroid()[axis])
+            return idx_list
+        pivot = 0
+        cost = float("inf")
+        selected_idx_list = None
+        dims = 3
+        for axis in range(len(dims)):
+            idx_list = axis_base_partition(axis)
+            tmp_cost, tmp_pivot = find_lowwer_cost(idx_list)
+            if cost  > tmp_cost :
+                cost = tmp_cost
+                pivot = tmp_pivot
+                selected_idx_list = idx_list
+
+                
+                
+        
+
+    def add_node(aabb_leaf_list):
+        
+        
+        N = len(aabb_leaf_list)
+        if N == 1 :
+            self.left = aabb_leaf_list[0]
+            self.right = None
+        if N == 2 : 
+            self.left = aabb_leaf_list[0]
+            self.right = aabb_leaf_right[1]
+
     
     
-    def insert_primitive(self, aabb_leaf_list):
+    def insert_primitive(self, aabb_leaf_list, p_x_min = 9999 , p_x_max = 9999, p_y_min = 9999, p_y_max = 9999, p_z_min = 9999, p_z_max = 9999):
         """ 
             recursive Method : 
             stop condtion : aabb_leaf_list is 0
@@ -218,7 +278,17 @@ class AABBTree(BaseTree):
                 max_z = max(aabb_leaf.z_max, max_z)
             return min_x, max_x, min_y, max_y, min_z, max_z
         self.x_min, self.x_max, self.y_min, self.y_max, self.z_min, self.z_max = compute_bound_volume(aabb_leaf_list)
-        
+        checker =   (self.x_min == p_x_min and self.x_max == p_x_max and \
+                     self.y_min == p_y_min and self.y_max == p_y_max and \
+                     self.z_min == p_z_min and self.z_max == p_z_max)
+        print(compute_bound_volume(aabb_leaf_list))
+
+        if checker : 
+            self.data = []
+            for data in aabb_leaf_list:
+                self.data.append(data)
+            return
+
         object_size = len(aabb_leaf_list)
         print("obj size : " ,object_size)
         assert object_size > 0, "aabb_leaf_list is empty!"
@@ -229,8 +299,8 @@ class AABBTree(BaseTree):
             self.leftTree = AABBTree()
             self.rightTree = AABBTree()
             aabb_leaf_list, p_k = self.partition(aabb_leaf_list)
-            self.leftTree.insert_primitive(aabb_leaf_list[    : p_k ])
-            self.rightTree.insert_primitive(aabb_leaf_list[p_k :     ])
+            self.leftTree.insert_primitive(aabb_leaf_list[    : p_k ], self.x_min, self.x_max, self.y_min, self.y_max,self.z_min, self.z_max)
+            self.rightTree.insert_primitive(aabb_leaf_list[p_k :     ], self.x_min, self.x_max, self.y_min, self.y_max,self.z_min, self.z_max)
             
 
     def partition(self, aabb_leaf_list):
@@ -250,27 +320,40 @@ class AABBTree(BaseTree):
             ['y',y_length, self.y_max, self.y_min],
             ['z',z_length, self.z_max, self.z_min]]
         l = sorted(l, key=itemgetter(1) )
+        print(l)
         key = l[-1]
         divider = key[-1] + key[1]/2
-
+        ida = 0
+        if l[0] == 'x':
+            ida = 0
+        elif l[0] == 'y':
+            ida = 1
+        elif l[0] == 'z':
+            ida = 2
+        
+        print("ida : ", ida)
         left_list = []
         right_list = []
         for leaf in aabb_leaf_list:
-            left =  abs(divider - getattr(leaf, "{}_min".format(key[0])))
-            right = abs(divider - getattr(leaf, "{}_max".format(key[0])))
+            # left =  abs(divider - getattr(leaf, "{}_min".format(key[0])))
+            # right = abs(divider - getattr(leaf, "{}_max".format(key[0])))
+            # print(leaf.get_centroid())
+            centroid = leaf.get_centroid()[ida]
+            
 
-
-            if left > right :
+            # print(centroid)
+            
+            if centroid <= divider :
                 left_list.append(leaf)
             else : 
                 right_list.append(leaf)
-
-        partition_idx = len(left_list)
-        left_list.extend(right_list)
-        print("right list size : {},, left_list size : {}".format(len(right_list), len(left_list) ))
-        print("total size : ", len(left_list), "partition :", partition_idx)
         
-        return left_list, len(left_list)
+        partition_idx = len(left_list)
+        print("left_list size : {},, right list size : {}".format(len(left_list), len(right_list) ), "partition :", partition_idx)
+        
+        left_list.extend(right_list)
+        
+        return left_list, partition_idx
         
         
         
@@ -288,17 +371,22 @@ class AABBTree(BaseTree):
                 if cond : 
                     return y, x
                 return x,y
-            t_min_x = (self.x_min - ray.position[0]) / ray.direction[0]
-            t_max_x = (self.x_min - ray.position[0]) / ray.direction[0]
-        
+            d = ray.direction[0]
+            if d == 0:
+                d = 0.001
+            t_min_x = (self.x_min - ray.pos[0]) / d
+            t_max_x = (self.x_max - ray.pos[0]) / d
+
             tmin = t_min_x
             tmax = t_max_x 
             tmin, tmax = swap(tmin, tmax, tmin > tmax)
 
 
-
-            t_min_y = (self.y_min - ray.position[1]) / ray.direction[1]
-            t_max_y = (self.y_min - ray.position[1]) / ray.direction[1]
+            d = ray.direction[1]
+            if d == 0:
+                d = 0.001
+            t_min_y = (self.y_min - ray.pos[1]) / d
+            t_max_y = (self.y_max - ray.pos[1]) / d
             
             t_min_y, t_max_y = swap(t_min_y, t_max_y, t_min_y > t_max_y)
             
@@ -308,10 +396,12 @@ class AABBTree(BaseTree):
                 tmin = t_min_y
             if t_max_y < tmax:
                 tmax = t_max_y
-
             
-            t_min_z = (self.z_min - ray.position[2]) / ray.direction[2]
-            t_max_z = (self.z_min - ray.position[2]) / ray.direction[2]
+            d = ray.direction[2]
+            if d == 0:
+                d = 0.001
+            t_min_z = (self.z_min - ray.pos[2]) / d
+            t_max_z = (self.z_max - ray.pos[2]) / d
             
             t_min_z, t_max_z = swap(t_min_z, t_max_z, t_min_z > t_max_z)
                 
@@ -325,8 +415,9 @@ class AABBTree(BaseTree):
             return True
 
         value_list = []
-        
+        print("check intersect ")
         if is_intersect(ray):
+            print("intersect check")
             if self.data == None :
                 value_list1 = self.leftTree.ray_intersect(ray)
                 value_list2 = self.rightTree.ray_intersect(ray)
@@ -334,7 +425,7 @@ class AABBTree(BaseTree):
                 value_list.extend(value_list2)
             else : 
                 for leaf in self.data:
-                    
+                    print("leaft ", leaf)
                     inter_flag, coord = leaf.intersect_ray(ray)
                     if inter_flag:
                         value_list.append([leaf.f_idx, coord])
@@ -357,6 +448,18 @@ class AABBTree(BaseTree):
         pass
 
 import igl
+import os
 if __name__ == "__main__":
+    print(__file__)
     V,F = igl.read_triangle_mesh("pyviewer/cube.obj")
-    a = AABBTree().insert_entity(V, F)
+    a = AABBTree()
+    a.insert_entity(V, F)
+    t = Ray()
+    t.set_direction(np.array([0,0,-1]))
+    t.set_pos(np.array([0, 0, 1]))
+    result = a.ray_intersect(t)
+    print(t)
+    print(result)
+
+
+    
