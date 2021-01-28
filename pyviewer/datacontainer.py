@@ -43,5 +43,13 @@ class DataContainer():
 
     def get_rotation(self):
         return self.rot
+    
+
+
+    def query_ray(self, ray):
+        """
+            return nearest triangle.
+        """
+        return self.aabb.ray_intersect(ray)
 
     

@@ -2,7 +2,7 @@ import numpy as np
 from OpenGL.GL import * 
 from OpenGL.GLU import *
 
-
+import numpy as np 
 # NEED GL BUILDER 
 class Light():
     def __init__(self):
@@ -206,16 +206,23 @@ class Window():
     def draw(self):
         pass
 
-
+import AABB
 class Camera():
     
     CAM_NUM = 0
+    PERSPECTIVE_MODE = "perspect"
+    ORTHGONAL_MODE = "ortho"
     def __init__(self):
         self.default_cam_pos = self.cam_pos = [0,0,0]
         self.default_cam_direct = self.cam_direct = [0.,0.,-1.]
         self.default_cam_normal_direction = self.cam_normal_direction = [0.,1.,0.]
+        self.mode = Camera.ORTHGONAL_MODE
 
-    
+        # example
+        self.near = 0
+        self.far = 0
+
+
     def set_name(self, name=None):
         if name == None : 
             name = "NoNameCam_"+str(Camera.CAM_NUM)
@@ -228,12 +235,13 @@ class Camera():
         self.cam_pos[2] = z
 
     def update_campos(self, delta_x, delta_y, delta_z):
-        self.cam_pos += delta_x
-        self.cam_pos += delta_y
-        self.cam_pos += delta_z
+        self.cam_pos[0] += delta_x
+        self.cam_pos[1] += delta_y
+        self.cam_pos[2] += delta_z
+        return self
     
     def rotate(self, angle, axis):
-        pass
+        
         return self
     
     def set_direction(self, x, y, z):
@@ -243,8 +251,50 @@ class Camera():
             self.cam_direct[z] = z
 
     def __call__(self):
+        #Add transform after....
+        glTranslatef(*self.cam_pos)
         gluLookat(*self.cam_pos, *self.cam_direct, *self.cam_normal_direction)
+        gluOrtho(-1, 1, -1, 1, -1, 1)
         # return self.cam_pos, self.cam_direct, cam_normal_direction
+    def get_ray(self, x, y, res_w, res_h):
+        """
+            INPUT
+                viewport coordinate x, y 
+            Return
+                world coordinate (x,y,z) ray object
+        """
+        # inverse processing. display coord -> NDC coord
+        ndc_x = x * 2 / res_w - 1
+        ndc_y = y * 2 / res_h - 1
+        z = - 1.
+        # NDC coord -> projection 
+        
+        # projection -> cam coord
+        Lookatcam = np.eye(4,4)
+        
+        Lookatcam[0, :-1] = np.cross( np.array(self.cam_direct), np.array(self.cam_normal_direction))
+        Lookatcam[1, :-1] = np.array(self.cam_normal_direction)
+        Lookatcam[2, :-1] = np.array(self.cam_direct) 
+        
+        Lookatpos = np.eye(4,4)
+        Lookatpos[:-1, -1] = - np.array(self.cam_pos)
+        Looks = Lookatcam.dot(Lookatpos)
+        inv_Lat = np.linalg.inv(Looks)
+        
+        
+        direction = inv_Lat.dot(np.array([ndc_x, ndc_y, z, 0]))
+        pos = inv_Lat.dot(np.array([0.,0.,0., 1]))
+        
+        reval = AABB.Ray()
+        reval.set_pos(pos)
+        reval.set_direction(direction)
+        return reval
+        
+
+
 
 if __name__ == "__main__":
-    pass
+    testcam = Camera()
+    reval = testcam.get_ray(0,0, 300, 400)
+    print(reval)
+    
