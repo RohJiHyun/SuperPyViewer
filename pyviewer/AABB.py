@@ -96,7 +96,9 @@ class AABBLeaf(BaseTree):
         """
             ray := pos + direct * t
             point inside triangle P := A + vB + wC #each A,B,C vertex point, u + v + w = 1
-            return (flag, barycentric coordinate[w, u, v])
+            return (flag, barycentric coordinate[w, u, v]), t
+            if t < 0, it is back trangle from the ray start direction
+            if t > 0, it is front triangle from the ray start direction
         """
         e1 = self.v2 - self.v1 # let's Consdier as B
         e2 = self.v3 - self.v1 # let's Consider as C
@@ -107,7 +109,7 @@ class AABBLeaf(BaseTree):
         angle = normal.dot(ray.direction)
         tmp_Epsilon = 0.00001
         if abs(angle) < tmp_Epsilon: #if parallel ... they don't intersect.
-            return False, None
+            return False, None, t
         
 
         d = normal.dot(self.v1)
@@ -115,7 +117,7 @@ class AABBLeaf(BaseTree):
 
         t = -( normal.dot(ray.pos) + d ) / angle
         if t<0 :
-            return False, None
+            return False, None, t
 
         P = ray.pos + t * ray.direction
 
@@ -125,25 +127,25 @@ class AABBLeaf(BaseTree):
         C1 = np.cross(e1, vp1)
 
         if normal.dot(C1) <0:
-            return False, None
+            return False, None, t
 
         e2 = self.v3 - self.v2 
         vp2 = P - self.v2
         C2 = np.cross(e2, vp2)
         u = np.linalg.norm(C2) / triangle_area
         if normal.dot(C2) < 0 :
-            return False, None
+            return False, None, t
 
         e3 = self.v1 - self.v3
         vp3 = P - self.v3
         C3 = np.cross(e3, vp3)
         v = np.linalg.norm(C3) / triangle_area
         if normal.dot(C3) < 0 :
-            return False, None
+            return False, None, t
         
 
 
-        return True, (1 - u - v , u, v)
+        return True, (1 - u - v , u, v), t
 
 
 
@@ -426,12 +428,13 @@ class AABBTree(BaseTree):
             else : 
                 for leaf in self.data:
                     print("leaft ", leaf)
-                    inter_flag, coord = leaf.intersect_ray(ray)
+                    inter_flag, coord, t_val = leaf.intersect_ray(ray)
                     if inter_flag:
-                        value_list.append([leaf.f_idx, coord])
-                
+                        value_list.append([leaf.f_idx, coord, t_val])
+        sorted(value_list, key=attrgetter(-1))
         
-        return value_list
+        #return closest point from ray_position
+        return value_list[0] # Face_idx, Barycentric Coord, t_value
     
     def merge(self, otherObj):
         pass

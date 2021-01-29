@@ -3,7 +3,9 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 import numpy as np 
+
 # NEED GL BUILDER 
+import datacontainer
 class Light():
     def __init__(self):
         self.position = [5.0, 6.0, 0.0, 0.0]
@@ -109,10 +111,13 @@ class VCOCollection():
         Controll Cam_lists, Viewer State
     """
     def __init__(self):
-        self.cam_list = []
+        self.world = []
+        self.windows =[]
         # self.
     
-
+    def add_window(self):
+        pass
+    
     def read_default_yaml(self, file_name):
         pass
 
@@ -133,7 +138,7 @@ class RootWindow():
             title = "No Title"
         self.title = title
         self.set_layout(1,1)
-
+        self.vco = VCOCollection()
         self.child_group = [[]]
         
         
@@ -183,14 +188,16 @@ class Window():
     """
     WIN_NUM = 0
     def __init__(self, viewer_name = None):
-        if name == None : 
-            name = "NoNameW_" +str(WIN_NUM)
+        if viewer_name == None : 
+            viewer_name = "NoNameW_" +str(Window.WIN_NUM)
             Window.WIN_NUM += 1
-        self.name = name
+        self.name = viewer_name
         self.camera = Camera()
+        self.x = 0
+        self.y = 0
 
     def reshape(self,x,y, w, h):
-        self._set_xywh(self, x, y, w, h)
+        self._set_xywh( x, y, w, h)
         
         
     def _set_xywh(self, x, y, width, height):
@@ -203,8 +210,14 @@ class Window():
         self.x = _set_attribute(x, cond_function )
         self.y = _set_attribute(y, cond_function )
 
-    def draw(self):
-        pass
+    def draw(self, world):
+        glViewport(self.x, self.y, self.width, self.height)
+        
+        world.initialize()
+        self.camera()
+        world.world_draw()
+        
+        
 
 import AABB
 class Camera():

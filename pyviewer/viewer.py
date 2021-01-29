@@ -47,6 +47,7 @@ edges = (
     (5,7)
     )
 
+import datacontainer as dc 
 class Viewer():
 
     def __init__(self,title, width=300, height=400):
@@ -59,11 +60,16 @@ class Viewer():
         self.callback_table = dict()
         self.camera = np.array([0., 0., -1.])
         self.data = []
-
-
-
+        
+        #for test
+        self.world = dc.WorldContainer()
+        self.window = vco.Window()
+        self.window.reshape(0,0, 400, 300)
     def set_data(self, V, F):
         self.data.append( (V,F))
+        self.world.add_data(dc.DataContainer(V, F))
+        
+        
         
 
 
@@ -214,7 +220,8 @@ class Viewer():
     def _render_object(self):
         for data_object in self.data:
             pass
-        self.__tmp_render_function()
+        # self.__tmp_render_function()
+        self.window.draw(self.world)
     
 
     def _render__other_UI(self):
