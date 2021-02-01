@@ -109,7 +109,7 @@ class AABBLeaf(BaseTree):
         angle = normal.dot(ray.direction)
         tmp_Epsilon = 0.00001
         if abs(angle) < tmp_Epsilon: #if parallel ... they don't intersect.
-            return False, None, t
+            return False, None, None, -1
         
 
         d = normal.dot(self.v1)
@@ -117,7 +117,7 @@ class AABBLeaf(BaseTree):
 
         t = -( normal.dot(ray.pos) + d ) / angle
         if t<0 :
-            return False, None, t
+            return False, None, None, t
 
         P = ray.pos + t * ray.direction
 
@@ -127,25 +127,24 @@ class AABBLeaf(BaseTree):
         C1 = np.cross(e1, vp1)
 
         if normal.dot(C1) <0:
-            return False, None, t
+            return False, None, None, t
 
         e2 = self.v3 - self.v2 
         vp2 = P - self.v2
         C2 = np.cross(e2, vp2)
         u = np.linalg.norm(C2) / triangle_area
         if normal.dot(C2) < 0 :
-            return False, None, t
+            return False, None, None, t
 
         e3 = self.v1 - self.v3
         vp3 = P - self.v3
         C3 = np.cross(e3, vp3)
         v = np.linalg.norm(C3) / triangle_area
         if normal.dot(C3) < 0 :
-            return False, None, t
+            return False, None, None, t
         
 
-
-        return True, (1 - u - v , u, v), t
+        return True, (1 - u - v , u, v), self.get_closest_idx(*(1 - u - v , u, v)), t
 
 
 
@@ -155,6 +154,18 @@ class AABBLeaf(BaseTree):
 
     def convert_eclidian_coordinate(self, w, u, v):
         return self.v1 * w + self.v2 *w + self.v3 * v
+
+
+    def get_closest_idx(self, w, u, v):
+        if w > u :
+            if w > v :
+                return 0
+        else :
+            if u > v :
+                return 1
+        return 2
+        
+
 
     def merge(self, otehrObj):
         pass
@@ -186,11 +197,11 @@ class AABBTree(BaseTree):
 
     def insert_entity(self, V, F):
         print("initialize AABB Tree ...")
-        self.V = V 
+        self.V = V
         self.F = F
         aabb_leaf_list = []
         assert len(self.F) != 0, "Face size is 0 ..."
-        for f_idx, face_v_idx in enumerate(self.F) : 
+        for f_idx, face_v_idx in enumerate(self.F) :
             # f_idx, face_idx := {v_idx1, v_idx2, v_idx3}
             aabb_leaf_list.append(AABBLeaf().add_data(f_idx, *self.V[face_v_idx]))
 
@@ -423,18 +434,26 @@ class AABBTree(BaseTree):
             if self.data == None :
                 value_list1 = self.leftTree.ray_intersect(ray)
                 value_list2 = self.rightTree.ray_intersect(ray)
-                value_list.extend(value_list1)
-                value_list.extend(value_list2)
+                value_list.extend([value_list1])
+                value_list.extend([value_list2])
             else : 
                 for leaf in self.data:
-                    print("leaft ", leaf)
-                    inter_flag, coord, t_val = leaf.intersect_ray(ray)
+                    
+                    inter_flag, coord, closest_v_idx, t_val = leaf.intersect_ray(ray)
                     if inter_flag:
-                        value_list.append([leaf.f_idx, coord, t_val])
-        sorted(value_list, key=attrgetter(-1))
+                        value_list.append([leaf.f_idx, coord, closest_v_idx, t_val])
+        print(value_list)
+
+        sorted(value_list, key=itemgetter(-1))
+        print(value_list)
         
         #return closest point from ray_position
-        return value_list[0] # Face_idx, Barycentric Coord, t_value
+        if value_list == []:
+            return -1, -1, -1, -1
+        fid, b_coord, closest_v_idx, t_value = value_list[0]
+        
+        
+        return fid, b_coord, closest_v_idx, t_value # Face_idx, Barycentric Coord, t_value
     
     def merge(self, otherObj):
         pass

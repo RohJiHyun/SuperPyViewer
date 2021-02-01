@@ -14,7 +14,7 @@ class WorldContainer():
         self.reference_num = 0
         self.light = []
         self.data_container_list = []
-    
+        self.t= False
 
     def get_world(self):
         self.reference_num += 1
@@ -38,6 +38,14 @@ class WorldContainer():
         self.reference_num -= 1
         return self
 
+
+    def  t_update(self):
+        
+        if self.t:
+            return
+        self.t =True
+        print("ddjdls")
+        self.data_container_list[0].rotation_update(0.5,0.5,0.5)
     
 
 class RendererContainer():
@@ -49,6 +57,8 @@ class RendererContainer():
         self.draw_mesh_opt = draw_mesh_opt
         self.draw_point_opt = draw_point_opt
         self.set_frames(required_frames)
+        self.pickmaterial = vco.Material().set_ambient([0.,0.,0.,0.0])
+
         
     
     def set_frames(self, required_frames):
@@ -65,26 +75,54 @@ class RendererContainer():
         self.draw_mesh_opt = draw_mesh_opt
         self.draw_point_opt = draw_point_opt
 
-    def draw(self, V, F):
+    def draw(self, V, F, material = None, selected_v_idx = []):
+        def calc_face_normal(idx1, idx2, idx3):
+            # print("idx is {} {} {} ".format(idx1, idx2, idx3))
+            edge1 = V[idx2] - V[idx1]
+            edge2 = V[idx3] - V[idx1]
+            normal_vector = np.cross(edge1, edge2)
+            glNormal3fv(list(normal_vector))
+        # material = lambda : -1 if (material == None) else material
         
-
         def _draw(enum):
-            glBegin(enum)
+            
             for v_indice in F :
+                glBegin(enum)
+                calc_face_normal(*v_indice)
                 for v_idx in v_indice:
                     glVertex3fv(V[v_idx])
-            glEnd()
+                glEnd()
         start_t = time.time()
         
 
+
         if self.draw_mesh_opt:
+            material()
+
             _draw(GL_TRIANGLES)
         
         if self.draw_line_opt : 
-            _draw(GL_LINES)
+            material()
+            _draw(GL_LINE_LOOP)
 
-        if self.draw_point_opt:
-            _draw(GL_POINT)
+        # if self.draw_point_opt:
+        #     material()
+        #     _draw(GL_POINTS)
+        
+
+         
+        for idx in selected_v_idx:
+            print("draw selected", idx)
+            glPointSize(20.0)
+            self.pickmaterial()
+
+            glBegin(GL_POINTS)
+
+            glVertex3fv(V[idx])
+            glEnd()
+
+        # glDisable(GL_COLOR_MATERIAL)
+
         delta = time.time() - start_t
         if delta < self.limit_time_per_update :
             time.sleep( self.limit_time_per_update - delta )
@@ -101,14 +139,15 @@ class DataContainer():
         self.rot_z = 0.0
 
 
-        self.material = None
+        self.material = vco.Material()
         self.V = V
-        self.F = V
+        self.F = F
+        self.selected_v_idx = []
         self.is_initialized = False
         self.aabb = AABB.AABBTree()
-        self.renderer = RendererContainer()
+        self.renderer = RendererContainer(False, True, True)
         self.aabb.insert_entity(self.V, self.F)
-
+        
 
     def set_data(self, V, F):
         """ 
@@ -132,7 +171,7 @@ class DataContainer():
         self.rot_x += delta_x
         self.rot_y += delta_y
         self.rot_z += delta_z
-
+        
     def rotation_reset(self):
         self.rot_x = 0.0
         self.rot_y = 0.0
@@ -142,15 +181,26 @@ class DataContainer():
         pass
     
     def draw(self):
+        self.rot_x = 3
+        self.rot_y = 3
+        self.rot_z = 3
+
+        # print("x : {} y : {} z : {}".format(self.rot_x, self.rot_y, self.rot_z))
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
         glRotatef(self.rot_x, 1, 0, 0)
         glRotatef(self.rot_y, 0, 1, 0)
         glRotatef(self.rot_z, 0, 0, 1)
-        self.renderer.draw(self.V, self.F)
+
+        self.renderer.draw(self.V, self.F, self.material, self.selected_v_idx)
 
     def query_ray(self, ray):
         """
             return nearest triangle.
         """
-        return self.aabb.ray_intersect(ray)
+        fid, b_coord, fid_vid,t = self.aabb.ray_intersect(ray)
+        v_id = self.F[fid][fid_vid]
+        print(v_id)
+        return fid, b_coord, v_id, t
 
     

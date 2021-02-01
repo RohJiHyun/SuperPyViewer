@@ -13,6 +13,9 @@ class Light():
         self.set_ambient([1.0, 1.0, 1.0, 0.0])
         self.set_diffuse([1.0, 1.0, 1.0, 0.0])
         self.set_specular([1.0, 1.0, 1.0, 0.0])
+        self.set_ambient([255.0, 255.0, 255.0, 0.0])
+        self.set_diffuse([255.0, 255.0, 255.0, 0.0])
+        self.set_specular([255.0, 255.0, 255.0, 0.0])
         self.set_coeff()
 
     
@@ -58,13 +61,12 @@ class Light():
 
 class Material():
     def __init__(self):
-        self.set_ambient([0.2, 0.2 , 0.2 , 0.0])
-        # self.set_ambient([1., 1. , 1. , 0.0])
-        self.set_diffuse([0.6 , 0.6, 0.6, 0.0])
+        # self.set_ambient([0.2, 0.2 , 0.2 , 0.0])
+        self.set_ambient([1., 1. , 1. , 0.0])
+        self.set_diffuse([1. , 1, 1., 0.0])
         self.set_specular([0.2, 0.2, 0.2, 0.0])
-        self.set_emission([0.0, 0.0, 0.0, 0.0])
         self.set_emission([1.0, 0.0, 1.0, 0.0])
-        self.set_shininess([0.0])
+        self.set_shininess([1.0])
 
     def set_ambient(self, ambient):
         self.ambient = ambient
@@ -84,23 +86,25 @@ class Material():
     
 
     def initialize(self):
-        pass
+        glDisable(GL_COLOR_MATERIAL)
 
     def __call__(self):
         # glEnable(GL_COLOR_MATERIAL)
         
         # disable it. for using glMatrialfv function. not glcolor
         # see also https://www.khronos.org/opengl/wiki/File:Opengl_lighting_flowchart.png
-        glDisable(GL_COLOR_MATERIAL)
         
-        
-        
+
+        glDisable(GL_COLOR_MATERIAL)        
         # glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, self.ambient + self.diffuse)
         glMaterialfv(GL_FRONT, GL_AMBIENT, self.ambient)
         glMaterialfv(GL_FRONT, GL_DIFFUSE, self.diffuse)
         glMaterialfv(GL_FRONT, GL_SPECULAR, self.specular)
         glMaterialfv(GL_FRONT, GL_SHININESS, self.shininess)
         glMaterialfv(GL_FRONT, GL_EMISSION, self.emission)
+        # glEnable(GL_COLOR_MATERIAL)
+
+
         
 
 class VCOCollection():
@@ -199,7 +203,9 @@ class Window():
     def reshape(self,x,y, w, h):
         self._set_xywh( x, y, w, h)
         
-        
+    def get_ray(self, x, y):
+        return self.camera.get_ray(x,y, self.width, self.height)
+
     def _set_xywh(self, x, y, width, height):
         cond_function = lambda x : x > 0
         def _set_attribute(x, func):
@@ -211,9 +217,9 @@ class Window():
         self.y = _set_attribute(y, cond_function )
 
     def draw(self, world):
-        glViewport(self.x, self.y, self.width, self.height)
+        # glViewport(self.x, self.y, self.width, self.height)
         
-        world.initialize()
+        world.light_initialize()
         self.camera()
         world.world_draw()
         
@@ -226,7 +232,7 @@ class Camera():
     PERSPECTIVE_MODE = "perspect"
     ORTHGONAL_MODE = "ortho"
     def __init__(self):
-        self.default_cam_pos = self.cam_pos = [0,0,0]
+        self.default_cam_pos = self.cam_pos = [0.,0.,1.]
         self.default_cam_direct = self.cam_direct = [0.,0.,-1.]
         self.default_cam_normal_direction = self.cam_normal_direction = [0.,1.,0.]
         self.mode = Camera.ORTHGONAL_MODE
@@ -265,10 +271,12 @@ class Camera():
 
     def __call__(self):
         #Add transform after....
-        glTranslatef(*self.cam_pos)
-        gluLookat(*self.cam_pos, *self.cam_direct, *self.cam_normal_direction)
-        gluOrtho(-1, 1, -1, 1, -1, 1)
+
+        glOrtho(-1, 1, -1, 1, -1, 1)
+        # glTranslatef(*self.cam_pos)
+        gluLookAt(*self.cam_pos, *self.cam_direct, *self.cam_normal_direction)
         # return self.cam_pos, self.cam_direct, cam_normal_direction
+
     def get_ray(self, x, y, res_w, res_h):
         """
             INPUT
@@ -277,8 +285,11 @@ class Camera():
                 world coordinate (x,y,z) ray object
         """
         # inverse processing. display coord -> NDC coord
-        ndc_x = x * 2 / res_w - 1
-        ndc_y = y * 2 / res_h - 1
+        ndc_x = (x * 2 )/ res_w - 1
+        ndc_y = (y * 2 ) / res_h - 1
+        print(x,y)
+        print(res_w, res_h)
+        print("x : {} y : {}".format(ndc_x, ndc_y))
         z = - 1.
         # NDC coord -> projection 
         
@@ -288,19 +299,23 @@ class Camera():
         Lookatcam[0, :-1] = np.cross( np.array(self.cam_direct), np.array(self.cam_normal_direction))
         Lookatcam[1, :-1] = np.array(self.cam_normal_direction)
         Lookatcam[2, :-1] = np.array(self.cam_direct) 
-        
+        print(Lookatcam, "llos")
+
         Lookatpos = np.eye(4,4)
         Lookatpos[:-1, -1] = - np.array(self.cam_pos)
+        print(Lookatpos, "llos")
+
         Looks = Lookatcam.dot(Lookatpos)
         inv_Lat = np.linalg.inv(Looks)
         
-        
+        print(Looks, "llos")
+        print(inv_Lat, "llos")
         direction = inv_Lat.dot(np.array([ndc_x, ndc_y, z, 0]))
-        pos = inv_Lat.dot(np.array([0.,0.,0., 1]))
-        
+        pos = inv_Lat.dot(np.array([*self.cam_pos, 1]))
+        print(self.cam_pos)
         reval = AABB.Ray()
-        reval.set_pos(pos)
-        reval.set_direction(direction)
+        reval.set_pos(pos[:3])
+        reval.set_direction(direction[:3])
         return reval
         
 

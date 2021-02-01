@@ -64,7 +64,7 @@ class Viewer():
         #for test
         self.world = dc.WorldContainer()
         self.window = vco.Window()
-        self.window.reshape(0,0, 400, 300)
+        self.window.reshape(0,0, self.width, self.height)
     def set_data(self, V, F):
         self.data.append( (V,F))
         self.world.add_data(dc.DataContainer(V, F))
@@ -104,9 +104,8 @@ class Viewer():
                 event 
             """
             if event.type in [MOUSEMOTION, MOUSEBUTTONDOWN, MOUSEBUTTONUP]:
-                return function(event.x, event.y)
+                return function(*event.pos, self.window, self.world)
             elif event.type in [KEYUP, KEYDOWN]:
-                print(event , event.key)
                 return function(event.key)
             elif event.type == QUIT:
                 return idle_funtion(True)
@@ -190,7 +189,7 @@ class Viewer():
         pygame.quit()
 
     def _event_hanler(self, event):
-        print(event, "test")
+        # print(event, "test")
         logger.debug("event_hadler : {}".format(event.type))
         if event.type in self.callback_keys:
             self.callback_table[event.type](event)
@@ -207,7 +206,7 @@ class Viewer():
         
         
         # glRotatef(1.0,.0,1.,0)
-        glRotatef(0.5,.1,0.,0)
+        # glRotatef(0.5,.1,0.,0)
 
         glBegin(GL_TRIANGLES)
         for face_v_idx in F:
@@ -221,7 +220,9 @@ class Viewer():
         for data_object in self.data:
             pass
         # self.__tmp_render_function()
+        # self.world.t_update()
         self.window.draw(self.world)
+        
     
 
     def _render__other_UI(self):
@@ -233,8 +234,8 @@ class Viewer():
         # do something
         self.loop_state = True
         
-        gluPerspective(45, ( self.width / self.height ), 0.1, 50.)
-        glTranslatef(0.,0.,-5)
+        # gluPerspective(45, ( self.width / self.height ), 0.1, 50.)
+        # glTranslatef(0.,0.,-5)
         
         while self.loop_state:
             for event in pygame.event.get():
@@ -269,10 +270,18 @@ class CustomViewer(Viewer):
 
 
 
+def test_mouse(x, y, window, world):
+    ray = window.get_ray(x,y)
+    print(ray)
+    fid, b_coord, closest_v_idx, t = world.data_container_list[0].query_ray(ray)
+    if fid == -1 : 
+        return
+    world.data_container_list[0].selected_v_idx.append(closest_v_idx)
 
 
 if __name__ == "__main__":
     V, F = igl.read_triangle_mesh("./cube.obj")
     a = Viewer("title", 800, 900)
     a.set_data(V,F)
+    a.add_mouse_down_callback(test_mouse)
     a.launch()
