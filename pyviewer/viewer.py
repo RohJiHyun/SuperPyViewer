@@ -104,7 +104,7 @@ class Viewer():
                 event 
             """
             if event.type in [MOUSEMOTION, MOUSEBUTTONDOWN, MOUSEBUTTONUP]:
-                return function(*event.pos, self.window, self.world)
+                return function(event.type, *event.pos, self.window, self.world)
             elif event.type in [KEYUP, KEYDOWN]:
                 return function(event.key)
             elif event.type == QUIT:
@@ -270,18 +270,22 @@ class CustomViewer(Viewer):
 
 
 
-def test_mouse(x, y, window, world):
-    ray = window.get_ray(x,y)
-    print(ray)
-    fid, b_coord, closest_v_idx, t = world.data_container_list[0].query_ray(ray)
-    if fid == -1 : 
-        return
-    world.data_container_list[0].selected_v_idx.append(closest_v_idx)
-
+def test_mouse(e_type, x, y, window, world):
+    if e_type == MOUSEBUTTONDOWN:
+        ray = window.get_ray(x,y)
+        print(ray)
+        fid, b_coord, closest_v_idx, t = world.data_container_list[0].query_ray(ray)
+        if fid == -1 : 
+            return
+        world.data_container_list[0].selected_v_idx.append(closest_v_idx)
+def test_mouse_pop(e_type, x, y, window, world):
+    if e_type == MOUSEBUTTONUP:
+        world.data_container_list[0].selected_v_idx.clear()
 
 if __name__ == "__main__":
     V, F = igl.read_triangle_mesh("./cube.obj")
     a = Viewer("title", 800, 900)
     a.set_data(V,F)
     a.add_mouse_down_callback(test_mouse)
+    a.add_mouse_up_callback(test_mouse_pop)
     a.launch()

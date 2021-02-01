@@ -108,42 +108,47 @@ class AABBLeaf(BaseTree):
 
         angle = normal.dot(ray.direction)
         tmp_Epsilon = 0.00001
-        if abs(angle) < tmp_Epsilon: #if parallel ... they don't intersect.
+        if abs(angle) < tmp_Epsilon: #if parallel with plane, and 90 degree with normal vector  ... they don't intersect.
             return False, None, None, -1
         
 
-        d = normal.dot(self.v1)
+        d = -normal.dot(self.v1)
 
 
         t = -( normal.dot(ray.pos) + d ) / angle
-        if t<0 :
+        if t<0 : # IF T < 0, IT IS BACK SIDE OF RAY.
             return False, None, None, t
 
         P = ray.pos + t * ray.direction
 
 
-        e1 = self.v2-self.v1
+        e1 = self.v2 - self.v1
         vp1 = P - self.v1
         C1 = np.cross(e1, vp1)
+        C1_tri_area = np.linalg.norm(C1)/2
+        w = C1_tri_area / triangle_area
 
         if normal.dot(C1) <0:
             return False, None, None, t
 
         e2 = self.v3 - self.v2 
         vp2 = P - self.v2
-        C2 = np.cross(e2, vp2)
-        u = np.linalg.norm(C2) / triangle_area
+        C2 = np.cross(e2, vp2) # this is not tri area.
+        C2_tri_area = np.linalg.norm(C2)/2
+        u = C2_tri_area / triangle_area
         if normal.dot(C2) < 0 :
             return False, None, None, t
 
         e3 = self.v1 - self.v3
         vp3 = P - self.v3
         C3 = np.cross(e3, vp3)
-        v = np.linalg.norm(C3) / triangle_area
+        C3_tri_area = np.linalg.norm(C3)/2
+        v =  C3_tri_area / triangle_area
         if normal.dot(C3) < 0 :
             return False, None, None, t
         
-
+        # 1- u - v = w <= 1
+        # u + v <= 1
         return True, (1 - u - v , u, v), self.get_closest_idx(*(1 - u - v , u, v)), t
 
 

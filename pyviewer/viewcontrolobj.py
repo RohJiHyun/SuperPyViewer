@@ -290,28 +290,29 @@ class Camera():
         print(x,y)
         print(res_w, res_h)
         print("x : {} y : {}".format(ndc_x, ndc_y))
-        z = - 1.
+        z = 1.0
         # NDC coord -> projection 
         
         # projection -> cam coord
         Lookatcam = np.eye(4,4)
         
         Lookatcam[0, :-1] = np.cross( np.array(self.cam_direct), np.array(self.cam_normal_direction))
+        Lookatcam[0, :-1] = np.cross( np.array(self.cam_normal_direction), np.array(self.cam_direct) )
         Lookatcam[1, :-1] = np.array(self.cam_normal_direction)
         Lookatcam[2, :-1] = np.array(self.cam_direct) 
-        print(Lookatcam, "llos")
+        print(Lookatcam, "look_rot")
 
         Lookatpos = np.eye(4,4)
         Lookatpos[:-1, -1] = - np.array(self.cam_pos)
-        print(Lookatpos, "llos")
+        print(Lookatpos, "lookpos")
 
         Looks = Lookatcam.dot(Lookatpos)
         inv_Lat = np.linalg.inv(Looks)
         
-        print(Looks, "llos")
-        print(inv_Lat, "llos")
+        print(Looks, "looks")
+        print(inv_Lat, "inv_looks")
         direction = inv_Lat.dot(np.array([ndc_x, ndc_y, z, 0]))
-        pos = inv_Lat.dot(np.array([*self.cam_pos, 1]))
+        pos = inv_Lat.dot(np.array([0.0, 0.0, 0.0, 1.0 ]))
         print(self.cam_pos)
         reval = AABB.Ray()
         reval.set_pos(pos[:3])

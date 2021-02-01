@@ -112,7 +112,7 @@ class RendererContainer():
 
          
         for idx in selected_v_idx:
-            print("draw selected", idx)
+            # print("draw selected", idx)
             glPointSize(20.0)
             self.pickmaterial()
 
@@ -145,7 +145,7 @@ class DataContainer():
         self.selected_v_idx = []
         self.is_initialized = False
         self.aabb = AABB.AABBTree()
-        self.renderer = RendererContainer(False, True, True)
+        self.renderer = RendererContainer(False, True, False)
         self.aabb.insert_entity(self.V, self.F)
         
 
@@ -181,9 +181,9 @@ class DataContainer():
         pass
     
     def draw(self):
-        self.rot_x = 3
-        self.rot_y = 3
-        self.rot_z = 3
+        # self.rot_x = 3
+        # self.rot_y = 3
+        # self.rot_z = 3
 
         # print("x : {} y : {} z : {}".format(self.rot_x, self.rot_y, self.rot_z))
         glMatrixMode(GL_MODELVIEW)
@@ -199,8 +199,10 @@ class DataContainer():
             return nearest triangle.
         """
         fid, b_coord, fid_vid,t = self.aabb.ray_intersect(ray)
+        if fid == -1:
+            return -1, -1, -1, -1
         v_id = self.F[fid][fid_vid]
-        print(v_id)
+        print("f_id : {}, f_v_idx : {},\nF[fid] : {}\n v_id : {}".format(fid, fid_vid,self.F[fid], v_id))
         return fid, b_coord, v_id, t
 
     
