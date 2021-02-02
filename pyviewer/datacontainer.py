@@ -7,7 +7,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 import time
 import os 
-
+import transforms as trans
 
 class WorldContainer():
     def __init__(self):
@@ -102,7 +102,8 @@ class RendererContainer():
             _draw(GL_TRIANGLES)
         
         if self.draw_line_opt : 
-            material()
+            # material()
+            self.pickmaterial()
             _draw(GL_LINE_LOOP)
 
         # if self.draw_point_opt:
@@ -113,7 +114,7 @@ class RendererContainer():
          
         for idx in selected_v_idx:
             # print("draw selected", idx)
-            glPointSize(20.0)
+            glPointSize(10.0)
             self.pickmaterial()
 
             glBegin(GL_POINTS)
@@ -145,7 +146,7 @@ class DataContainer():
         self.selected_v_idx = []
         self.is_initialized = False
         self.aabb = AABB.AABBTree()
-        self.renderer = RendererContainer(False, True, False)
+        self.renderer = RendererContainer(True, True, False)
         self.aabb.insert_entity(self.V, self.F)
         
 
@@ -178,7 +179,8 @@ class DataContainer():
         self.rot_z = 0.0
 
     def get_rotation(self):
-        pass
+        return trans.RotationBuilder.make_euler_rotation(self.rot_x, self.rot_y, self.rot_z)
+
     
     def draw(self):
         # self.rot_x = 3
@@ -198,6 +200,11 @@ class DataContainer():
         """
             return nearest triangle.
         """
+        # dummy code. TODO 
+        rot_composite = get_rotation()
+        ray.direction = rot_composite * ray.direction
+        ray.pos = rot_composite * ray.pos
+
         fid, b_coord, fid_vid,t = self.aabb.ray_intersect(ray)
         if fid == -1:
             return -1, -1, -1, -1
@@ -206,4 +213,3 @@ class DataContainer():
         print("v1 : {}\nv2 : {}\nv3 : {}".format(self.V[self.F[fid][0]], self.V[self.F[fid][1]],self.V[self.F[fid][2]]))
         return fid, b_coord, v_id, t
 
-    

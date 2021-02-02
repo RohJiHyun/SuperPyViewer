@@ -311,8 +311,11 @@ class Camera():
         
         # print(Looks, "looks")
         # print(inv_Lat, "inv_looks")
-        direction = inv_Lat.dot(np.array([ndc_x, ndc_y, z, 0]))
+
+        # direction = inv_Lat.dot(np.array([ndc_x, ndc_y, z, 0]))
+        direction = inv_Lat.dot(np.array([0, 0, z, 0]))
         pos = inv_Lat.dot(np.array([0.0, 0.0, 0.0, 1.0 ]))
+        pos = inv_Lat.dot(np.array([ndc_x, ndc_y, 0.0, 1.0 ]))
         print(self.cam_pos)
         reval = AABB.Ray()
         reval.set_pos(pos[:3])

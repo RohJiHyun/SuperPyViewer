@@ -283,6 +283,12 @@ def test_mouse_pop(e_type, x, y, window, world):
     if e_type == MOUSEBUTTONUP:
         world.data_container_list[0].selected_v_idx.clear()
 
+def test_mouse_motion(e_type, x, y, window, world):
+    if e_type == MOUSEMOTION : 
+        ray = window.get_ray(x,y)
+        world.data_container_list[0].query_ray
+
+
 if __name__ == "__main__":
     V, F = igl.read_triangle_mesh("pyviewer/cube.obj")
     # V, F = igl.read_triangle_mesh("./cube.obj")
