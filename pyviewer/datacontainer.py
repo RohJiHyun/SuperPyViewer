@@ -203,6 +203,7 @@ class DataContainer():
             return -1, -1, -1, -1
         v_id = self.F[fid][fid_vid]
         print("f_id : {}, f_v_idx : {},\nF[fid] : {}\n v_id : {}".format(fid, fid_vid,self.F[fid], v_id))
+        print("v1 : {}\nv2 : {}\nv3 : {}".format(self.V[self.F[fid][0]], self.V[self.F[fid][1]],self.V[self.F[fid][2]]))
         return fid, b_coord, v_id, t
 
     

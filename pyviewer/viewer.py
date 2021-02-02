@@ -236,7 +236,8 @@ class Viewer():
         
         # gluPerspective(45, ( self.width / self.height ), 0.1, 50.)
         # glTranslatef(0.,0.,-5)
-        
+
+
         while self.loop_state:
             for event in pygame.event.get():
                 logger.debug("event is : {}".format(event))
@@ -283,7 +284,8 @@ def test_mouse_pop(e_type, x, y, window, world):
         world.data_container_list[0].selected_v_idx.clear()
 
 if __name__ == "__main__":
-    V, F = igl.read_triangle_mesh("./cube.obj")
+    V, F = igl.read_triangle_mesh("pyviewer/cube.obj")
+    # V, F = igl.read_triangle_mesh("./cube.obj")
     a = Viewer("title", 800, 900)
     a.set_data(V,F)
     a.add_mouse_down_callback(test_mouse)

@@ -149,7 +149,7 @@ class AABBLeaf(BaseTree):
         
         # 1- u - v = w <= 1
         # u + v <= 1
-        return True, (1 - u - v , u, v), self.get_closest_idx(*(1 - u - v , u, v)), t
+        return True, (1 - u - v , u, v), self.get_closest_idx(ray,*(1 - u - v , u, v)), t
 
 
 
@@ -161,14 +161,31 @@ class AABBLeaf(BaseTree):
         return self.v1 * w + self.v2 *w + self.v3 * v
 
 
-    def get_closest_idx(self, w, u, v):
-        if w > u :
-            if w > v :
-                return 0
-        else :
-            if u > v :
-                return 1
-        return 2
+    def get_closest_idx(self, ray, w, u, v):
+        def line_equation(ray, point):
+            # np.abs(ray.direction.dot(point) + ray.pos)/np.sqrt(-1**2 + ray.direction ** 2)
+            return np.abs(ray.direction.dot(point) + ray.pos)/np.linalg.norm(ray.direction)
+        # if w > u :
+        #     if w > v :
+        #         return 0
+        # else :
+        #     if u > v :
+        #         return 1
+        # return 2
+        l = []
+        a = line_equation(ray, self.v1)
+        print(a)
+
+        l.append([0,a])
+        a = line_equation(ray, self.v2)
+        l.append([1,a])
+        a = line_equation(ray, self.v3)
+        l.append([2,a])
+        l = sorted(l, key=itemgetter(-1))
+        print("fool", l)
+        print("small one : ", l[0])
+        return l[0][0]
+                
         
 
 
@@ -389,41 +406,41 @@ class AABBTree(BaseTree):
                 if cond : 
                     return y, x
                 return x,y
-            d = ray.direction[0]
-            if d == 0:
-                d = 0.001
-            t_min_x = (self.x_min - ray.pos[0]) / d
-            t_max_x = (self.x_max - ray.pos[0]) / d
+            d1= ray.direction[0]
+            if d1 == 0:
+                d1 = 0.001
+            t_min_x = (self.x_min - ray.pos[0]) / d1
+            t_max_x = (self.x_max - ray.pos[0]) / d1
 
             tmin = t_min_x
             tmax = t_max_x 
             tmin, tmax = swap(tmin, tmax, tmin > tmax)
 
 
-            d = ray.direction[1]
-            if d == 0:
-                d = 0.001
-            t_min_y = (self.y_min - ray.pos[1]) / d
-            t_max_y = (self.y_max - ray.pos[1]) / d
+            d2 = ray.direction[1] 
+            if d2 == 0:
+                d2 = 0.001
+            t_min_y = (self.y_min - ray.pos[1]) / d2
+            t_max_y = (self.y_max - ray.pos[1]) / d2
             
             t_min_y, t_max_y = swap(t_min_y, t_max_y, t_min_y > t_max_y)
             
-            if tmin > t_max_y or t_max_y > tmax :
+            if tmin > t_max_y or t_min_y > tmax :
                 return False
             if  t_min_y > tmin:
                 tmin = t_min_y
             if t_max_y < tmax:
                 tmax = t_max_y
             
-            d = ray.direction[2]
-            if d == 0:
-                d = 0.001
-            t_min_z = (self.z_min - ray.pos[2]) / d
-            t_max_z = (self.z_max - ray.pos[2]) / d
+            d3 = ray.direction[2] 
+            if d3 == 0:
+                d3 = 0.001
+            t_min_z = (self.z_min - ray.pos[2]) / d3
+            t_max_z = (self.z_max - ray.pos[2]) / d3
             
             t_min_z, t_max_z = swap(t_min_z, t_max_z, t_min_z > t_max_z)
                 
-            if tmin > t_max_z or t_max_z > tmax :
+            if tmin > t_max_z or t_min_z > tmax :
                 return False
             if  t_min_z > tmin:
                 tmin = t_min_z
@@ -439,8 +456,11 @@ class AABBTree(BaseTree):
             if self.data == None :
                 value_list1 = self.leftTree.ray_intersect(ray)
                 value_list2 = self.rightTree.ray_intersect(ray)
-                value_list.extend([value_list1])
-                value_list.extend([value_list2])
+                if value_list1[-1] != -1:
+                    value_list.extend([value_list1])
+                if value_list2[-1] !=  -1:
+                    value_list.extend([value_list2])
+                
             else : 
                 for leaf in self.data:
                     
@@ -449,15 +469,14 @@ class AABBTree(BaseTree):
                         value_list.append([leaf.f_idx, coord, closest_v_idx, t_val])
         print(value_list)
 
-        sorted(value_list, key=itemgetter(-1))
+        value_list = sorted(value_list, key=itemgetter(-1))
         print(value_list)
         
         #return closest point from ray_position
         if value_list == []:
             return -1, -1, -1, -1
         fid, b_coord, closest_v_idx, t_value = value_list[0]
-        
-        
+
         return fid, b_coord, closest_v_idx, t_value # Face_idx, Barycentric Coord, t_value
     
     def merge(self, otherObj):
@@ -479,6 +498,7 @@ import os
 if __name__ == "__main__":
     print(__file__)
     V,F = igl.read_triangle_mesh("pyviewer/cube.obj")
+    
     a = AABBTree()
     a.insert_entity(V, F)
     t = Ray()

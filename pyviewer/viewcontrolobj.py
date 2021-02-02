@@ -285,12 +285,12 @@ class Camera():
                 world coordinate (x,y,z) ray object
         """
         # inverse processing. display coord -> NDC coord
-        ndc_x = (x * 2 )/ res_w - 1
-        ndc_y = (y * 2 ) / res_h - 1
+        ndc_x = -((x * 2 )/ res_w - 1)
+        ndc_y = -((y * 2 ) / res_h - 1)
         print(x,y)
         print(res_w, res_h)
         print("x : {} y : {}".format(ndc_x, ndc_y))
-        z = 1.0
+        z = 1
         # NDC coord -> projection 
         
         # projection -> cam coord
@@ -300,22 +300,27 @@ class Camera():
         Lookatcam[0, :-1] = np.cross( np.array(self.cam_normal_direction), np.array(self.cam_direct) )
         Lookatcam[1, :-1] = np.array(self.cam_normal_direction)
         Lookatcam[2, :-1] = np.array(self.cam_direct) 
-        print(Lookatcam, "look_rot")
+        # print(Lookatcam, "look_rot")
 
         Lookatpos = np.eye(4,4)
         Lookatpos[:-1, -1] = - np.array(self.cam_pos)
-        print(Lookatpos, "lookpos")
+        # print(Lookatpos, "lookpos")
 
         Looks = Lookatcam.dot(Lookatpos)
         inv_Lat = np.linalg.inv(Looks)
         
-        print(Looks, "looks")
-        print(inv_Lat, "inv_looks")
+        # print(Looks, "looks")
+        # print(inv_Lat, "inv_looks")
         direction = inv_Lat.dot(np.array([ndc_x, ndc_y, z, 0]))
         pos = inv_Lat.dot(np.array([0.0, 0.0, 0.0, 1.0 ]))
         print(self.cam_pos)
         reval = AABB.Ray()
         reval.set_pos(pos[:3])
+        # import copy
+        # ss = copy.deepcopy(direction[:3])
+        # ss[-1] = pos[:3][-1]
+        # reval.set_pos(ss)
+
         reval.set_direction(direction[:3])
         return reval
         
