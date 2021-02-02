@@ -164,7 +164,18 @@ class AABBLeaf(BaseTree):
     def get_closest_idx(self, ray, w, u, v):
         def line_equation(ray, point):
             # np.abs(ray.direction.dot(point) + ray.pos)/np.sqrt(-1**2 + ray.direction ** 2)
-            return np.abs(ray.direction.dot(point) + ray.pos)/np.linalg.norm(ray.direction)
+            p = ray.pos
+            d = ray.direction 
+            edge_pq = point - p 
+            edge_dp = d - p
+            # cos( Theta )
+            edge_cos = edge_pq.dot(edge_dp) / (np.linalg.norm(edge_pq) * np.linalg.norm(edge_dp))
+            theta = np.arccos(edge_cos)
+            length = np.linalg.norm(edge_pq) * np.sin(theta)
+
+            return length
+            # return np.abs(ray.direction.dot(point) + ray.pos)/np.linalg.norm(ray.direction)
+
         # if w > u :
         #     if w > v :
         #         return 0
