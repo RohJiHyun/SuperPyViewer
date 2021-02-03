@@ -233,10 +233,14 @@ class AABBTree(BaseTree):
         self.V = V
         self.F = F
         aabb_leaf_list = []
+        print("self F is what", F)
         assert len(self.F) != 0, "Face size is 0 ..."
         for f_idx, face_v_idx in enumerate(self.F) :
             # f_idx, face_idx := {v_idx1, v_idx2, v_idx3}
+
             aabb_leaf_list.append(AABBLeaf().add_data(f_idx, *self.V[face_v_idx]))
+            print("todo")
+        print("apple wha", aabb_leaf_list)
 
 
         self.insert_primitive(aabb_leaf_list)
@@ -306,6 +310,9 @@ class AABBTree(BaseTree):
 
         """
         def compute_bound_volume(aabb_leaf_list):
+            if not aabb_leaf_list:
+                return    -1, -1, -1, -1, -1, -1
+
             aabb_leaf = aabb_leaf_list[0]
             min_x = aabb_leaf.x_min
             max_x = aabb_leaf.x_max
@@ -324,10 +331,11 @@ class AABBTree(BaseTree):
                 max_z = max(aabb_leaf.z_max, max_z)
             return min_x, max_x, min_y, max_y, min_z, max_z
         self.x_min, self.x_max, self.y_min, self.y_max, self.z_min, self.z_max = compute_bound_volume(aabb_leaf_list)
+        if self.x_min == self.x_max and self.y_min == self.y_max and self.z_min ==self.z_max :
+            return
         checker =   (self.x_min == p_x_min and self.x_max == p_x_max and \
                      self.y_min == p_y_min and self.y_max == p_y_max and \
                      self.z_min == p_z_min and self.z_max == p_z_max)
-        print(compute_bound_volume(aabb_leaf_list))
 
         if checker : 
             self.data = []

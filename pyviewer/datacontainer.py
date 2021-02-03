@@ -172,6 +172,11 @@ class DataContainer():
         self.rot_x += delta_x
         self.rot_y += delta_y
         self.rot_z += delta_z
+
+        
+        # self.aabb = AABB.AABBTree()
+        # self.aabb.insert_entity((self.get_rotation()*self.V.T).T, self.F)
+
         
     def rotation_reset(self):
         self.rot_x = 0.0
@@ -194,6 +199,7 @@ class DataContainer():
         glRotatef(self.rot_y, 0, 1, 0)
         glRotatef(self.rot_z, 0, 0, 1)
 
+ 
         self.renderer.draw(self.V, self.F, self.material, self.selected_v_idx)
 
     def query_ray(self, ray):
@@ -202,8 +208,8 @@ class DataContainer():
         """
         # dummy code. TODO 
         rot_composite = self.get_rotation()
-        ray.direction = rot_composite * ray.direction
-        ray.pos = rot_composite * ray.pos
+        ray.direction = np.linalg.inv(rot_composite.matrix ).dot( ray.direction)
+        ray.pos = np.linalg.inv(rot_composite.matrix ).dot(ray.pos)
 
         fid, b_coord, fid_vid,t = self.aabb.ray_intersect(ray)
         if fid == -1:

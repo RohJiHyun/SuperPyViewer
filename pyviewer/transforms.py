@@ -11,10 +11,11 @@ def make_matrix(angle, axis):
     sin = np.sin(angle)
     cos = np.cos(angle)
     def _rot_z():
-        return np.array([[cos,-sin,0,0],
-                        [sin,cos,0,0],
-                        [0,0,1,0],
-                        [0,0,0,1]
+        return np.array([
+                        [ cos,-sin,  0,  0],
+                        [ sin,  cos,  0, 0],
+                        [  0,     0,  1, 0],
+                        [  0,     0,  0, 1]
                         ]).astype(np.float32)
     def _rot_y():
         return np.array([[ cos, 0,sin, 0],
@@ -24,10 +25,10 @@ def make_matrix(angle, axis):
                         ]).astype(np.float32)
     def _rot_x():
         return np.array([
-                        [  1,   0, 0, 0],
-                        [cos,-sin, 0, 0],
-                        [  0,  0,  0, 1],
-                        [sin,cos,  0, 0]
+                        [  1,  0,   0, 0],
+                        [  0,cos,-sin, 0],
+                        [  0,sin, cos, 0],
+                        [  0,  0,   0, 1]
                         ]).astype(np.float32)
     
     if axis == 0:
@@ -40,7 +41,7 @@ def make_matrix(angle, axis):
         return np.eye(4,4)
 
 class Rotation():
-    def __init__(self, init_theta = 0, axis=0, is_affine=True, other_obj = None):
+    def __init__(self, init_theta = 0, axis=0, is_affine=False, other_obj = None):
         if other_obj :
             init_theta = other_obj.theta
             axis = other_obj.axis
@@ -52,6 +53,9 @@ class Rotation():
         self.matrix = make_matrix(init_theta, axis)
         if not self.is_affine:
             self.matrix = self.matrix[:3, :3]
+        
+
+        print(self.matrix)
             
         
     
@@ -91,7 +95,7 @@ class Rotation():
 
     def __imul__(self, other):
         #TODO
-        self.matrix.dot(other.matrix)
+        self.matrix = self.matrix.dot(other.matrix)
         return self
         
     
@@ -113,6 +117,11 @@ class RotationBuilder():
         
         
         return reval
+
+
+    def euler_to_qt(self, eul_mat):
+        # TODO
+        pass
 
 
 

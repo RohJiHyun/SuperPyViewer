@@ -120,7 +120,7 @@ class Viewer():
             callback : it's function.
             callback funtion input args : (x, y)
         """
-        self.callback_table[MOUSEBUTTONMOTION] = self._callback_wrapper(callback)
+        self.callback_table[MOUSEMOTION] = self._callback_wrapper(callback)
 
 
     def add_mouse_down_callback(self, callback):
@@ -270,27 +270,48 @@ class CustomViewer(Viewer):
 
 
 
-
+test_mode = False
 def test_mouse(e_type, x, y, window, world):
     if e_type == MOUSEBUTTONDOWN:
+        global test_mode 
+        test_mode = True
+        print(test_mode, "button down")
         ray = window.get_ray(x,y)
         print(ray)
         fid, b_coord, closest_v_idx, t = world.data_container_list[0].query_ray(ray)
         if fid == -1 : 
             return
         world.data_container_list[0].selected_v_idx.append(closest_v_idx)
+
+
 def test_mouse_pop(e_type, x, y, window, world):
     if e_type == MOUSEBUTTONUP:
+        global test_mode
+        test_mode = False
+        
+        print(test_mode, "button up")
         world.data_container_list[0].selected_v_idx.clear()
 
+
+
 def test_mouse_motion(e_type, x, y, window, world):
-    if e_type == MOUSEMOTION : 
+    print("test mode is {}, mousemotion is : {}".format(test_mode, e_type == MOUSEMOTION))
+    if  test_mode:
+        change = pygame.mouse.get_rel()
+        print(change, "change ")
+        
         ray = window.get_ray(x,y)
-        world.data_container_list[0].query_ray(ray)
-        if not fid == -1 :
-            return 
+        
+        fid, b_coord, closest_v_idx, t = world.data_container_list[0].query_ray(ray)
+        if not fid == -1:
+            return
         ratio = 0.1
-        world.data_container_list[0].rotation_update
+        world.data_container_list[0].rotation_update(0, ratio * change[0], ratio * change[1])
+        
+    
+
+    
+        
 
 
 if __name__ == "__main__":
@@ -300,4 +321,5 @@ if __name__ == "__main__":
     a.set_data(V,F)
     a.add_mouse_down_callback(test_mouse)
     a.add_mouse_up_callback(test_mouse_pop)
+    a.add_mouse_motion_callback(test_mouse_motion)
     a.launch()

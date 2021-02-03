@@ -199,6 +199,8 @@ class Window():
         self.camera = Camera()
         self.x = 0
         self.y = 0
+        self.width = -1.
+        self.height = -1.
 
     def reshape(self,x,y, w, h):
         self._set_xywh( x, y, w, h)
@@ -211,8 +213,13 @@ class Window():
         def _set_attribute(x, func):
             if func(x):
                 return x
-        self.width =  _set_attribute(width, cond_function )
-        self.height = _set_attribute(height, cond_function )
+        if width == -1. and height == -1:
+            self.width =  _set_attribute(width, cond_function )
+            self.height = _set_attribute(height, cond_function )
+        else :
+            wh_ratio = width / height if width > height else height / width
+            self.width =  _set_attribute(width, cond_function )
+            self.height = _set_attribute(height, cond_function )
         self.x = _set_attribute(x, cond_function )
         self.y = _set_attribute(y, cond_function )
 
