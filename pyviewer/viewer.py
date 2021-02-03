@@ -286,7 +286,11 @@ def test_mouse_pop(e_type, x, y, window, world):
 def test_mouse_motion(e_type, x, y, window, world):
     if e_type == MOUSEMOTION : 
         ray = window.get_ray(x,y)
-        world.data_container_list[0].query_ray
+        world.data_container_list[0].query_ray(ray)
+        if not fid == -1 :
+            return 
+        ratio = 0.1
+        world.data_container_list[0].rotation_update
 
 
 if __name__ == "__main__":

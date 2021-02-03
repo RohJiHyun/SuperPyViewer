@@ -201,7 +201,7 @@ class DataContainer():
             return nearest triangle.
         """
         # dummy code. TODO 
-        rot_composite = get_rotation()
+        rot_composite = self.get_rotation()
         ray.direction = rot_composite * ray.direction
         ray.pos = rot_composite * ray.pos
 
