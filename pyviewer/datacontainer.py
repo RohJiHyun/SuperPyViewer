@@ -39,15 +39,6 @@ class WorldContainer():
         return self
 
 
-    def  t_update(self):
-        
-        if self.t:
-            return
-        self.t =True
-        print("ddjdls")
-        self.data_container_list[0].rotation_update(0.5,0.5,0.5)
-    
-
 class RendererContainer():
     """
         Fixed render time Based
@@ -88,8 +79,13 @@ class RendererContainer():
             
             for v_indice in F :
                 glBegin(enum)
+
+
                 calc_face_normal(*v_indice)
+
                 for v_idx in v_indice:
+                    material()
+
                     glVertex3fv(V[v_idx])
                 glEnd()
         start_t = time.time()
@@ -97,14 +93,13 @@ class RendererContainer():
 
 
         if self.draw_mesh_opt:
-            material()
 
             _draw(GL_TRIANGLES)
         
-        if self.draw_line_opt : 
-            # material()
-            self.pickmaterial()
-            _draw(GL_LINE_LOOP)
+        # if self.draw_line_opt : 
+        #     # material()
+        #     self.pickmaterial()
+        #     _draw(GL_LINE_LOOP)
 
         # if self.draw_point_opt:
         #     material()
@@ -115,9 +110,9 @@ class RendererContainer():
         for idx in selected_v_idx:
             # print("draw selected", idx)
             glPointSize(10.0)
-            self.pickmaterial()
 
             glBegin(GL_POINTS)
+            self.pickmaterial()
 
             glVertex3fv(V[idx])
             glEnd()

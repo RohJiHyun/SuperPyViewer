@@ -8,7 +8,7 @@ import numpy as np
 import datacontainer
 class Light():
     def __init__(self):
-        self.position = [5.0, 6.0, 0.0, 0.0]
+        self.position = [0.0, 2.0, 0.0, 0.0]
         self.direcion = [0., 0., -1.]
         self.set_ambient([1.0, 1.0, 1.0, 0.0])
         self.set_diffuse([1.0, 1.0, 1.0, 0.0])
@@ -95,7 +95,7 @@ class Material():
         # see also https://www.khronos.org/opengl/wiki/File:Opengl_lighting_flowchart.png
         
 
-        glDisable(GL_COLOR_MATERIAL)        
+        # glDisable(GL_COLOR_MATERIAL)        
         # glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, self.ambient + self.diffuse)
         glMaterialfv(GL_FRONT, GL_AMBIENT, self.ambient)
         glMaterialfv(GL_FRONT, GL_DIFFUSE, self.diffuse)
@@ -206,20 +206,22 @@ class Window():
         self._set_xywh( x, y, w, h)
         
     def get_ray(self, x, y):
+        print("getray {},{}".format(self.width, self.height))
         return self.camera.get_ray(x,y, self.width, self.height)
 
     def _set_xywh(self, x, y, width, height):
+        # glViewport(x,y,width, height)
+        
         cond_function = lambda x : x > 0
         def _set_attribute(x, func):
             if func(x):
                 return x
-        if width == -1. and height == -1:
-            self.width =  _set_attribute(width, cond_function )
-            self.height = _set_attribute(height, cond_function )
-        else :
-            wh_ratio = width / height if width > height else height / width
-            self.width =  _set_attribute(width, cond_function )
-            self.height = _set_attribute(height, cond_function )
+        width =  _set_attribute(width, cond_function )
+        height = _set_attribute(height, cond_function )
+        self.factor_width = 1 if self.width == -1 else width/self.width
+        self.factor_height = 1 if self.width == -1 else width/self.width
+        self.width =  _set_attribute(width, cond_function )
+        self.height = _set_attribute(height, cond_function )
         self.x = _set_attribute(x, cond_function )
         self.y = _set_attribute(y, cond_function )
 
@@ -227,7 +229,7 @@ class Window():
         # glViewport(self.x, self.y, self.width, self.height)
         
         world.light_initialize()
-        self.camera()
+        self.camera(self.factor_width, self.factor_height)
         world.world_draw()
         
         
@@ -276,11 +278,16 @@ class Camera():
             self.cam_direct[y] = y
             self.cam_direct[z] = z
 
-    def __call__(self):
+    def __call__(self, w_factor = 1., h_factor = 1.):
         #Add transform after....
-
-        glOrtho(-1, 1, -1, 1, -1, 1)
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        self.w_factor = w_factor
+        self.h_factor = h_factor
+        glOrtho(-1*w_factor, 1*w_factor, -1*h_factor, 1*h_factor, -1, 1)
         # glTranslatef(*self.cam_pos)
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
         gluLookAt(*self.cam_pos, *self.cam_direct, *self.cam_normal_direction)
         # return self.cam_pos, self.cam_direct, cam_normal_direction
 
@@ -292,11 +299,12 @@ class Camera():
                 world coordinate (x,y,z) ray object
         """
         # inverse processing. display coord -> NDC coord
-        ndc_x = -((x * 2 )/ res_w - 1)
-        ndc_y = -((y * 2 ) / res_h - 1)
-        print(x,y)
+        ndc_x = -((x * 2 )/ res_w - 1*self.w_factor)
+        ndc_y = -((y * 2 ) / res_h - 1*self.h_factor)
+        print("view x y : ", x,y)
+        print("w_f {} w_h".format(self.w_factor,self.h_factor))
         print(res_w, res_h)
-        print("x : {} y : {}".format(ndc_x, ndc_y))
+        print("ndc_coord x : {} y : {}".format(ndc_x, ndc_y))
         z = 1
         # NDC coord -> projection 
         
@@ -321,7 +329,7 @@ class Camera():
 
         # direction = inv_Lat.dot(np.array([ndc_x, ndc_y, z, 0]))
         direction = inv_Lat.dot(np.array([0, 0, z, 0]))
-        pos = inv_Lat.dot(np.array([0.0, 0.0, 0.0, 1.0 ]))
+        # pos = inv_Lat.dot(np.array([0.0, 0.0, 0.0, 1.0 ]))
         pos = inv_Lat.dot(np.array([ndc_x, ndc_y, 0.0, 1.0 ]))
         print(self.cam_pos)
         reval = AABB.Ray()
@@ -332,6 +340,7 @@ class Camera():
         # reval.set_pos(ss)
 
         reval.set_direction(direction[:3])
+        print("ray val", reval)
         return reval
         
 

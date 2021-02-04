@@ -157,15 +157,17 @@ class Viewer():
         self.screen = pygame.display.set_mode((self.width, self.height), pygame.OPENGL| pygame.DOUBLEBUF)
         pygame.display.set_caption(self.title)
 
-        glClearColor(0.,0.,0.,0.)
+        # glClearColor(0.,0.,0.,0.)
         # glShadeModel(GL_FLAT)
+        print("light on")
         self.light = vco.Light()
         self.light.initialize()
+        print("light_initialize", self.light)
       
 
         self.material = vco.Material()
         self.material.initialize()
-        self.material()
+        # self.material()
 
 
 
@@ -271,16 +273,18 @@ class CustomViewer(Viewer):
 
 
 test_mode = False
+tty = False
 def test_mouse(e_type, x, y, window, world):
     if e_type == MOUSEBUTTONDOWN:
         global test_mode 
         test_mode = True
-        print(test_mode, "button down")
         ray = window.get_ray(x,y)
         print(ray)
         fid, b_coord, closest_v_idx, t = world.data_container_list[0].query_ray(ray)
         if fid == -1 : 
-            return
+            global tty 
+            tty = True
+            return 
         world.data_container_list[0].selected_v_idx.append(closest_v_idx)
 
 
@@ -288,25 +292,25 @@ def test_mouse_pop(e_type, x, y, window, world):
     if e_type == MOUSEBUTTONUP:
         global test_mode
         test_mode = False
+        global tty
+        tty = False
         
-        print(test_mode, "button up")
         world.data_container_list[0].selected_v_idx.clear()
 
 
 
 def test_mouse_motion(e_type, x, y, window, world):
-    print("test mode is {}, mousemotion is : {}".format(test_mode, e_type == MOUSEMOTION))
-    if  test_mode:
+    if  tty and test_mode:
         change = pygame.mouse.get_rel()
         print(change, "change ")
         
-        ray = window.get_ray(x,y)
+        # ray = window.get_ray(x,y)
         
-        fid, b_coord, closest_v_idx, t = world.data_container_list[0].query_ray(ray)
-        if not fid == -1:
-            return
+        # fid, b_coord, closest_v_idx, t = world.data_container_list[0].query_ray(ray)
+        # if not fid == -1:
+        #     return
         ratio = 0.1
-        world.data_container_list[0].rotation_update(0, ratio * change[0], ratio * change[1])
+        world.data_container_list[0].rotation_update( -ratio * change[1], -ratio * change[0], 0)
         
     
 

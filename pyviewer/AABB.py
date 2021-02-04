@@ -185,7 +185,6 @@ class AABBLeaf(BaseTree):
         # return 2
         l = []
         a = line_equation(ray, self.v1)
-        print(a)
 
         l.append([0,a])
         a = line_equation(ray, self.v2)
@@ -193,8 +192,7 @@ class AABBLeaf(BaseTree):
         a = line_equation(ray, self.v3)
         l.append([2,a])
         l = sorted(l, key=itemgetter(-1))
-        print("fool", l)
-        print("small one : ", l[0])
+
         return l[0][0]
                 
         
