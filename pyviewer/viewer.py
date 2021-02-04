@@ -302,7 +302,7 @@ def test_mouse_pop(e_type, x, y, window, world):
 def test_mouse_motion(e_type, x, y, window, world):
     if  tty and test_mode:
         change = pygame.mouse.get_rel()
-        print(change, "change ")
+        # print(change, "change ")
         
         # ray = window.get_ray(x,y)
         

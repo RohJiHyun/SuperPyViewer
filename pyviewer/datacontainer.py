@@ -189,7 +189,7 @@ class DataContainer():
 
         # print("x : {} y : {} z : {}".format(self.rot_x, self.rot_y, self.rot_z))
         glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
+        # glLoadIdentity()
         glRotatef(self.rot_x, 1, 0, 0)
         glRotatef(self.rot_y, 0, 1, 0)
         glRotatef(self.rot_z, 0, 0, 1)
@@ -202,9 +202,11 @@ class DataContainer():
             return nearest triangle.
         """
         # dummy code. TODO 
-        rot_composite = self.get_rotation()
-        ray.direction = np.linalg.inv(rot_composite.matrix ).dot( ray.direction)
-        ray.pos = np.linalg.inv(rot_composite.matrix ).dot(ray.pos)
+        # rot_composite = self.get_rotation()
+
+        # print("rot composite", rot_composite)
+        # ray.direction = np.linalg.inv(rot_composite.matrix ).dot( ray.direction)
+        # ray.pos = np.linalg.inv(rot_composite.matrix ).dot(ray.pos)
 
         fid, b_coord, fid_vid,t = self.aabb.ray_intersect(ray)
         if fid == -1:

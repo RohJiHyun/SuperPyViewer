@@ -299,7 +299,7 @@ class Camera():
                 world coordinate (x,y,z) ray object
         """
         # inverse processing. display coord -> NDC coord
-        ndc_x = -((x * 2 )/ res_w - 1*self.w_factor)
+        ndc_x = ((x * 2 )/ res_w - 1*self.w_factor)
         ndc_y = -((y * 2 ) / res_h - 1*self.h_factor)
         print("view x y : ", x,y)
         print("w_f {} w_h".format(self.w_factor,self.h_factor))
@@ -310,15 +310,30 @@ class Camera():
         
         # projection -> cam coord
         Lookatcam = np.eye(4,4)
+        array = (GLfloat *16)()
         
+        glGetFloat(GL_PROJECTION_MATRIX, array)
+        toeye = np.array(array).reshape(4,4)
+        toeye = np.linalg.inv(toeye)
+        array2 = (GLfloat *16)()
+
+        glGetFloat(GL_MODELVIEW_MATRIX, array2)
+        toworld = np.array(array2).reshape(4,4)
+        toworld = np.linalg.inv(toworld)
+
+
+        print("pri", np.array(list(array)).reshape(4,4))
+        print("pri2", np.array(list(array2)).reshape(4,4))
+        print("inv pr2", np.linalg.inv(np.array(list(array2)).reshape(4,4)))
         Lookatcam[0, :-1] = np.cross( np.array(self.cam_direct), np.array(self.cam_normal_direction))
-        Lookatcam[0, :-1] = np.cross( np.array(self.cam_normal_direction), np.array(self.cam_direct) )
+        # Lookatcam[0, :-1] = np.cross( np.array(self.cam_normal_direction), np.array(self.cam_direct) )
         Lookatcam[1, :-1] = np.array(self.cam_normal_direction)
         Lookatcam[2, :-1] = np.array(self.cam_direct) 
         # print(Lookatcam, "look_rot")
 
         Lookatpos = np.eye(4,4)
         Lookatpos[:-1, -1] = - np.array(self.cam_pos)
+        print("cam pos ", Lookatpos)
         # print(Lookatpos, "lookpos")
 
         Looks = Lookatcam.dot(Lookatpos)
@@ -331,6 +346,11 @@ class Camera():
         direction = inv_Lat.dot(np.array([0, 0, z, 0]))
         # pos = inv_Lat.dot(np.array([0.0, 0.0, 0.0, 1.0 ]))
         pos = inv_Lat.dot(np.array([ndc_x, ndc_y, 0.0, 1.0 ]))
+        
+        # TMP TODO
+        direction =toworld.dot(toeye.dot(np.array([0, 0, z, 0])))
+        pos =toworld.dot(toeye.dot(np.array([ndc_x,ndc_y,0.0, 1])))
+        
         print(self.cam_pos)
         reval = AABB.Ray()
         reval.set_pos(pos[:3])
