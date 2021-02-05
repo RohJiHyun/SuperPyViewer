@@ -5,17 +5,17 @@ from OpenGL.GLU import *
 import numpy as np 
 
 # NEED GL BUILDER 
-import datacontainer
+# import datacontainer
+from pyviewer import datacontainer
 class Light():
     def __init__(self):
-        self.position = [0.0, 2.0, 0.0, 0.0]
+        self.position = [0.0, 0.0, 1.0, 0.0]
         self.direcion = [0., 0., -1.]
         self.set_ambient([1.0, 1.0, 1.0, 0.0])
+        self.set_ambient([0.0, 0.0, 0.0, 0.0])
         self.set_diffuse([1.0, 1.0, 1.0, 0.0])
         self.set_specular([1.0, 1.0, 1.0, 0.0])
-        self.set_ambient([255.0, 255.0, 255.0, 0.0])
-        self.set_diffuse([255.0, 255.0, 255.0, 0.0])
-        self.set_specular([255.0, 255.0, 255.0, 0.0])
+
         self.set_coeff()
 
     
@@ -42,18 +42,19 @@ class Light():
     def initialize(self):
         glClearColor(0.,0.,0.,0.)
         glClearDepth(1.0)
+        glShadeModel(GL_SMOOTH)
         glEnable(GL_CULL_FACE)
         glFrontFace(GL_CCW)
         glEnable(GL_NORMALIZE)
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_LIGHTING)
+        
         glEnable(GL_LIGHT0)
 
         glLightfv(GL_LIGHT0, GL_AMBIENT, self.ambient)
         glLightfv(GL_LIGHT0, GL_DIFFUSE, self.diffuse)
         glLightfv(GL_LIGHT0, GL_SPECULAR, self.specular)
         glLightfv(GL_LIGHT0, GL_POSITION, self.position)
-
 
     
     def __call__(self):
@@ -86,7 +87,7 @@ class Material():
     
 
     def initialize(self):
-        glDisable(GL_COLOR_MATERIAL)
+        glEnable(GL_COLOR_MATERIAL)
 
     def __call__(self):
         # glEnable(GL_COLOR_MATERIAL)
@@ -97,6 +98,7 @@ class Material():
 
         # glDisable(GL_COLOR_MATERIAL)        
         # glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, self.ambient + self.diffuse)
+        glEnable(GL_COLOR_MATERIAL)
         glMaterialfv(GL_FRONT, GL_AMBIENT, self.ambient)
         glMaterialfv(GL_FRONT, GL_DIFFUSE, self.diffuse)
         glMaterialfv(GL_FRONT, GL_SPECULAR, self.specular)
@@ -104,6 +106,15 @@ class Material():
         glMaterialfv(GL_FRONT, GL_EMISSION, self.emission)
         # glEnable(GL_COLOR_MATERIAL)
 
+        #anti aliasing
+        # glEnable(GL_BLEND);
+        # glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+ 
+
+
+
+        # glEnable(GL_LINE_SMOOTH)
+        # glEnable(GL_POINT_SMOOTH)
 
         
 
@@ -206,7 +217,6 @@ class Window():
         self._set_xywh( x, y, w, h)
         
     def get_ray(self, x, y):
-        print("getray {},{}".format(self.width, self.height))
         return self.camera.get_ray(x,y, self.width, self.height)
 
     def _set_xywh(self, x, y, width, height):
@@ -284,11 +294,12 @@ class Camera():
         glLoadIdentity()
         self.w_factor = w_factor
         self.h_factor = h_factor
-        glOrtho(-1*w_factor, 1*w_factor, -1*h_factor, 1*h_factor, -1, 1)
+        glOrtho(-1*w_factor, 1*w_factor, -1*h_factor, 1*h_factor, -2, 2)
         # glTranslatef(*self.cam_pos)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         gluLookAt(*self.cam_pos, *self.cam_direct, *self.cam_normal_direction)
+
         # return self.cam_pos, self.cam_direct, cam_normal_direction
 
     def get_ray(self, x, y, res_w, res_h):
@@ -306,6 +317,7 @@ class Camera():
         print(res_w, res_h)
         print("ndc_coord x : {} y : {}".format(ndc_x, ndc_y))
         z = 1
+        # z = -1
         # NDC coord -> projection 
         
         # projection -> cam coord
@@ -314,17 +326,14 @@ class Camera():
         
         glGetFloat(GL_PROJECTION_MATRIX, array)
         toeye = np.array(array).reshape(4,4)
-        toeye = np.linalg.inv(toeye)
+        toeye = np.linalg.inv(toeye.T)
         array2 = (GLfloat *16)()
 
         glGetFloat(GL_MODELVIEW_MATRIX, array2)
         toworld = np.array(array2).reshape(4,4)
-        toworld = np.linalg.inv(toworld)
+        toworld = np.linalg.inv(toworld.T)
 
 
-        print("pri", np.array(list(array)).reshape(4,4))
-        print("pri2", np.array(list(array2)).reshape(4,4))
-        print("inv pr2", np.linalg.inv(np.array(list(array2)).reshape(4,4)))
         Lookatcam[0, :-1] = np.cross( np.array(self.cam_direct), np.array(self.cam_normal_direction))
         # Lookatcam[0, :-1] = np.cross( np.array(self.cam_normal_direction), np.array(self.cam_direct) )
         Lookatcam[1, :-1] = np.array(self.cam_normal_direction)
@@ -333,7 +342,7 @@ class Camera():
 
         Lookatpos = np.eye(4,4)
         Lookatpos[:-1, -1] = - np.array(self.cam_pos)
-        print("cam pos ", Lookatpos)
+
         # print(Lookatpos, "lookpos")
 
         Looks = Lookatcam.dot(Lookatpos)
@@ -349,9 +358,10 @@ class Camera():
         
         # TMP TODO
         direction =toworld.dot(toeye.dot(np.array([0, 0, z, 0])))
-        pos =toworld.dot(toeye.dot(np.array([ndc_x,ndc_y,0.0, 1])))
+        # pos =toworld.dot(toeye.dot(np.array([ndc_x,ndc_y,0.0, 1])))
+        pos =toworld.dot(toeye.dot(np.array([ndc_x,ndc_y,0.0, 1.])))
         
-        print(self.cam_pos)
+
         reval = AABB.Ray()
         reval.set_pos(pos[:3])
         # import copy

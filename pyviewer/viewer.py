@@ -9,7 +9,8 @@ from OpenGL.GL import *
 
 from OpenGL.GLU import *
 
-import viewcontrolobj as vco
+# import viewcontrolobj as vco
+from pyviewer import viewcontrolobj as vco
 #CUSTOM SETTINGS.
 # from pyviewer.viewcontrolobj import  (Light, Material)
 
@@ -21,31 +22,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("Viewer Logger")
 
 
-verticies = (
-    (1, -1, -1),
-    (1, 1, -1),
-    (-1, 1, -1),
-    (-1, -1, -1),
-    (1, -1, 1),
-    (1, 1, 1),
-    (-1, -1, 1),
-    (-1, 1, 1)
-    )
-
-edges = (
-    (0,1),
-    (0,3),
-    (0,4),
-    (2,1),
-    (2,3),
-    (2,7),
-    (6,3),
-    (6,4),
-    (6,7),
-    (5,1),
-    (5,4),
-    (5,7)
-    )
 
 import datacontainer as dc 
 class Viewer():
@@ -224,7 +200,9 @@ class Viewer():
         # self.__tmp_render_function()
         # self.world.t_update()
         self.window.draw(self.world)
-        
+    
+
+
     
 
     def _render__other_UI(self):

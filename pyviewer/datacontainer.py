@@ -1,13 +1,13 @@
 import numpy as np 
-import viewcontrolobj as vco
-import AABB
+from pyviewer import viewcontrolobj as vco
+from pyviewer import AABB
 
 from OpenGL.GL import * 
 
 from OpenGL.GLU import *
 import time
 import os 
-import transforms as trans
+from pyviewer import transforms as trans
 
 class WorldContainer():
     def __init__(self):
@@ -84,7 +84,6 @@ class RendererContainer():
                 calc_face_normal(*v_indice)
 
                 for v_idx in v_indice:
-                    material()
 
                     glVertex3fv(V[v_idx])
                 glEnd()
@@ -93,11 +92,18 @@ class RendererContainer():
 
 
         if self.draw_mesh_opt:
-
+            # material()
+            glColor3f(1.0, 1.0, 1.0)
+            glColor3f(1.0, 1.0, 1.0)
             _draw(GL_TRIANGLES)
         
         # if self.draw_line_opt : 
         #     # material()
+        #     glLineWidth(20)
+        #     glDisable(GL_LIGHTING)
+        
+        #     glDisable(GL_LIGHT0)
+        #     glColor3f(0.0, 0.0, 1.0)
         #     self.pickmaterial()
         #     _draw(GL_LINE_LOOP)
 
@@ -109,14 +115,19 @@ class RendererContainer():
          
         for idx in selected_v_idx:
             # print("draw selected", idx)
-            glPointSize(10.0)
+            glDisable(GL_LIGHTING)
 
+            glDisable(GL_LIGHT0)
+            glPointSize(10.0)
+            # self.pickmaterial()
+            glColor3f(1.0, 0.0, .0)
             glBegin(GL_POINTS)
-            self.pickmaterial()
 
             glVertex3fv(V[idx])
             glEnd()
-
+            glEnable(GL_LIGHTING)
+            glEnable(GL_LIGHT0)
+            
         # glDisable(GL_COLOR_MATERIAL)
 
         delta = time.time() - start_t
@@ -189,13 +200,19 @@ class DataContainer():
 
         # print("x : {} y : {} z : {}".format(self.rot_x, self.rot_y, self.rot_z))
         glMatrixMode(GL_MODELVIEW)
-        # glLoadIdentity()
-        glRotatef(self.rot_x, 1, 0, 0)
-        glRotatef(self.rot_y, 0, 1, 0)
-        glRotatef(self.rot_z, 0, 0, 1)
 
- 
+        glRotatef(self.rot_z, 0, 0, 1)
+        glRotatef(self.rot_y, 0, 1, 0)
+        glRotatef(self.rot_x, 1, 0, 0)
+
+
+
         self.renderer.draw(self.V, self.F, self.material, self.selected_v_idx)
+
+       
+
+
+
 
     def query_ray(self, ray):
         """
