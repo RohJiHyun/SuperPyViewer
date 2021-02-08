@@ -7,6 +7,9 @@ import numpy as np
 # NEED GL BUILDER 
 # import datacontainer
 from pyviewer import datacontainer
+from pyviewer import AABB
+
+
 class Light():
     def __init__(self):
         self.position = [0.0, 0.0, 1.0, 0.0]
@@ -155,6 +158,13 @@ class RootWindow():
         self.set_layout(1,1)
         self.vco = VCOCollection()
         self.child_group = [[]]
+        self.gui = []
+
+        self.x = x 
+        self.y = y
+        self.width = width 
+        self.hegiht = height
+        
         
         
         
@@ -244,7 +254,6 @@ class Window():
         
         
 
-import AABB
 class Camera():
     
     CAM_NUM = 0

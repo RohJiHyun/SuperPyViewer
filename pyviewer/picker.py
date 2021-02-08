@@ -7,7 +7,7 @@ import numpy as np
 # NEED GL BUILDER
 import datacontainer
 
-
+# TODO 
 class Picker():
 
     def __init__(self):

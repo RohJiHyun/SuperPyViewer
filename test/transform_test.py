@@ -1,3 +1,5 @@
+import pytest
+
 import pyviewer.transforms as trans
 import numpy as np 
 #GL MDOEL VIEW TRANSFORM and INVERSE TEST
@@ -9,7 +11,7 @@ from OpenGL.GLU import *
 
 def y_axis_transform_test():
     
-
+    pass
 
 
 

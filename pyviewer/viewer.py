@@ -12,7 +12,6 @@ from OpenGL.GLU import *
 # import viewcontrolobj as vco
 from pyviewer import viewcontrolobj as vco
 #CUSTOM SETTINGS.
-# from pyviewer.viewcontrolobj import  (Light, Material)
 
 
 
@@ -21,9 +20,8 @@ logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger("Viewer Logger")
 
+from pyviewer import datacontainer as dc
 
-
-import datacontainer as dc 
 class Viewer():
 
     def __init__(self,title, width=300, height=400):
