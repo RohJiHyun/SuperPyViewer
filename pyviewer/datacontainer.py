@@ -200,7 +200,6 @@ class DataContainer():
 
         # print("x : {} y : {} z : {}".format(self.rot_x, self.rot_y, self.rot_z))
         glMatrixMode(GL_MODELVIEW)
-
         glRotatef(self.rot_z, 0, 0, 1)
         glRotatef(self.rot_y, 0, 1, 0)
         glRotatef(self.rot_x, 1, 0, 0)

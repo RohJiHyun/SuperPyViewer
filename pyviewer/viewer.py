@@ -169,34 +169,9 @@ class Viewer():
         logger.debug("event_hadler : {}".format(event.type))
         if event.type in self.callback_keys:
             self.callback_table[event.type](event)
-    
-    def __tmp_render_function(self, V=None, F = None):
-        (V, F) = self.data[0]
-        def calc_face_normal(idx1, idx2, idx3):
-            # print("idx is {} {} {} ".format(idx1, idx2, idx3))
-            edge1 = V[idx2] - V[idx1]
-            edge2 = V[idx3] - V[idx1]
-            normal_vector = np.cross(edge1, edge2)
-            glNormal3fv(list(normal_vector))
-            
-        
-        
-        # glRotatef(1.0,.0,1.,0)
-        # glRotatef(0.5,.1,0.,0)
-
-        glBegin(GL_TRIANGLES)
-        for face_v_idx in F:
-            calc_face_normal(*face_v_idx)
-            for v_idx in face_v_idx:
-                
-                glVertex3fv(list(V[v_idx]))
-        glEnd()
 
     def _render_object(self):
-        for data_object in self.data:
-            pass
-        # self.__tmp_render_function()
-        # self.world.t_update()
+
         self.window.draw(self.world)
     
 
@@ -223,13 +198,7 @@ class Viewer():
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
             # self.Cube()
             self._render_object()
-            self._render__other_UI()                
 
-
-
-
-
-            # self.screen.blit(self.background, (0, 0))
             pygame.display.flip()
             pygame.time.wait(10)
 
