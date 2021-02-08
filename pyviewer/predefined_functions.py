@@ -12,6 +12,7 @@ def mouse_motion_function(function, *args):
 
 
 def mouse_released_function(function, *args):
+    pass
 
 
 def picking():

@@ -33,7 +33,7 @@ class BaseMouseListener():
 class MouseManager():
     def __init__(self):
         self.mouse_listener_list = []
-
+    
 
     def process_event(self, event):
         """
@@ -44,7 +44,7 @@ class MouseManager():
 
     def _mouse_released(self, event):
         pass
-    
+
     def _mouse_pressed(self, event):
         pass
 
