@@ -22,6 +22,12 @@ logger = logging.getLogger("Viewer Logger")
 
 from pyviewer import datacontainer as dc
 
+
+
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QTextEdit, QDockWidget, QListWidget)
+from PyQt5.QtCore import Qt
+
+
 class Viewer():
 
     def __init__(self,title, width=300, height=400):
@@ -210,10 +216,73 @@ class Viewer():
     # def __str__(self):
     #     return "Hello. shawnegade."
 
+import sys
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QTextEdit, QDockWidget, QListWidget)
+from PyQt5.QtCore import Qt
+from pyviewer import ui
+from pyveiwer import viewcontrolobj as vco 
+class MainWindow(QMainWindow):
+	def __init__(self):
+		super().__init__()
+		self.resize(800, 600)
 
-class CustomViewer(Viewer):
-    pass
+		dockWidget = QDockWidget('Dock', self)
+
+		self.textEdit = QTextEdit()
+		self.textEdit.setFontPointSize(16)
+
+		self.listWidget = QListWidget()
+		self.listWidget.addItem('Google')
+		self.listWidget.addItem('Facebook')
+		self.listWidget.addItem('Microsoft')
+		self.listWidget.addItem('Apple')
+		self.listWidget.itemDoubleClicked.connect(self.get_list_item)
+
+		dockWidget.setWidget(self.listWidget)
+		dockWidget.setFloating(False)
+
+		self.setCentralWidget(self.textEdit)
+		self.addDockWidget(Qt.RightDockWidgetArea, dockWidget)
+
+	def get_list_item(self):
+		self.textEdit.setPlainText(self.listWidget.currentItem().text())
+
+if __name__ == '__main__':
+	app = QApplication(sys.argv)
+
+	window = MainWindow()
+	window.show()
+
+	sys.exit(app.exec_())
+
+
+
+
+class CustomViewer(QMainWindow):
+    def __init__(self, title, width, height, dock_widget):
+        self.resize(width, height)
+        self.windows = []
+
+
+    def add_window(self,window, isdock=True):
+        """
+            window is QT Window Object. and window_object has lisener
+        """
+        if isdock : 
+            win = QDockWidget(window.name, self)
+            win.setFloating(False)
+            self.windows.append(win)
+            self.addDockWidget(Qt.RightDockWidgetArea, win)
     
+
+    def add_menubar(self):
+        pass
+
+    def run(self):
+        self.show()
+    
+
+
 
 
 

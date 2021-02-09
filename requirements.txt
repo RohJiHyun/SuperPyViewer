@@ -2,4 +2,4 @@ numpy
 pygame
 pytest
 pyyaml
-pygame_gui
+PyQt5

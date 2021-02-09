@@ -204,8 +204,9 @@ class RootWindow():
         self.cols = self.cols
     
 
-    
-    
+from PyQt5.QtWidgets import (QApplication, QMainWindow, OpenGLQT, QTextEdit, QDockWidget, QListWidget)
+from PyQt5.QtCore import Qt
+
 
 class Window():
     """
@@ -303,6 +304,8 @@ class Camera():
         glLoadIdentity()
         self.w_factor = w_factor
         self.h_factor = h_factor
+        # gluPerspective(45, (1/ 2), 0.1, 50.)
+
         glOrtho(-1*w_factor, 1*w_factor, -1*h_factor, 1*h_factor, -2, 2)
         # glTranslatef(*self.cam_pos)
         glMatrixMode(GL_MODELVIEW)

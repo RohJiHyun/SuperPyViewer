@@ -1,5 +1,6 @@
-import pygame
-import pygame_gui
+import sys
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QTextEdit, QDockWidget, QListWidget)
+from PyQt5.QtCore import Qt
 
 class UIListener():
     """
@@ -16,12 +17,17 @@ class UIListener():
 
 
 #TODO ANIMATION UI CONTROLL CLASS
-class AnimeUI():
+class ToolBarUI(QDockWidget):
+    pass
+class AnimeStatusBarUI(QDockWidget):
     pass
 
 
-class MainUI():
-    def __init__(self, x, y, width, height):
+
+
+
+class MainUI(QDockWidget):
+    def __init__(self, title, x, y, width, height):
         self.x = x 
         self.y = y 
         self.width = width 
