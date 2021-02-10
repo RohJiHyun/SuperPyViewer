@@ -204,21 +204,24 @@ class RootWindow():
         self.cols = self.cols
     
 
-from PyQt5.QtWidgets import (QApplication, QMainWindow, OpenGLQT, QTextEdit, QDockWidget, QListWidget)
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QOpenGLWidget, QTextEdit, QDockWidget, QListWidget)
 from PyQt5.QtCore import Qt
 
 
-class Window():
+class Window(QOpenGLWidget):
     """
         Class Window Draw World. 
     """
     WIN_NUM = 0
     def __init__(self, viewer_name = None):
+        super().__init__()
         if viewer_name == None : 
             viewer_name = "NoNameW_" +str(Window.WIN_NUM)
             Window.WIN_NUM += 1
         self.name = viewer_name
         self.camera = Camera()
+        self.proj = Projection()
+
         self.x = 0
         self.y = 0
         self.width = -1.
@@ -226,7 +229,10 @@ class Window():
 
     def reshape(self,x,y, w, h):
         self._set_xywh( x, y, w, h)
-        
+    
+    def set_world(self, world):
+        self.world = world
+    
     def get_ray(self, x, y):
         return self.camera.get_ray(x,y, self.width, self.height)
 
@@ -246,13 +252,97 @@ class Window():
         self.x = _set_attribute(x, cond_function )
         self.y = _set_attribute(y, cond_function )
 
-    def draw(self, world):
+    def draw(self):
         # glViewport(self.x, self.y, self.width, self.height)
-        
-        world.light_initialize()
+        print("drawing")
+        self.world.light_initialize()
         self.camera(self.factor_width, self.factor_height)
-        world.world_draw()
+        self.world.world_draw()
+    
+
+
+    def initializeGL(self):
         
+        glClearColor(0,0,0,0)
+        glEnable(GL_DEPTH_TEST)
+
+
+
+    def resizeGL(self, width, height):
+        glViewport(0,0,width,height)
+        
+        aspect = width / float(height)
+        self.proj.set_mode('ortho').set_aspect_ratio(width, height).set_angle(45.0).compile()
+        
+        self.proj()
+        
+    def paintGL(self):
+        print("hello")
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        self.draw()
+        glFlush()
+
+
+class Projection():
+    PERSPECTIVE_MODE = "perspect"
+    ORTHGONAL_MODE = "ortho"
+    def __init__(self):
+        
+        self.mode = Projection.ORTHGONAL_MODE
+        
+        self.width = 1.
+        self.height = 1.
+        self.aspect = self.width / self.height
+        self.angle = 45.0
+
+        self.near = -2
+        self.far  = 2
+        self.top = 1
+        self.bottom = -1 
+        self.left = -1 
+        self.right = 1
+
+    def set_mode(self, mode = "ortho"):
+        if Projection.ORTHGONAL_MODE == mode :
+            self.mode = mode
+        elif Projection.PERSPECTIVE_MODE == mode: 
+            self.mode = mode 
+        else : 
+            self.mode = Projection.ORTHGONAL_MODE
+        return self
+    
+    def set_aspect_ratio(self, width, height):
+        self.width = width 
+
+        self.hegith = height 
+        self.aspect = width/float(height)
+
+        return self
+
+    def set_angle(self, angle):
+        self.angle = angle
+        return self
+    
+    def compile(self):
+        self.view = self._wrap_proj()
+
+    def _wrap_proj(self):
+        def wrap_func():
+            if self.mode == Projection.ORTHGONAL_MODE : 
+                glOrtho(self.left, self.right, self.top, self.bottom, self.near, self.far)
+            elif self.mode == Projection.PERSPECTIVE_MODE:
+                gluPerspective(45.0, self.aspect, 1., 100.)
+        return wrap_func
+
+
+
+    def __call__(self):
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        self.view()
+        
+
+    
         
 
 class Camera():
@@ -299,15 +389,15 @@ class Camera():
             self.cam_direct[z] = z
 
     def __call__(self, w_factor = 1., h_factor = 1.):
-        #Add transform after....
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        self.w_factor = w_factor
-        self.h_factor = h_factor
-        # gluPerspective(45, (1/ 2), 0.1, 50.)
+        # #Add transform after....
+        # glMatrixMode(GL_PROJECTION)
+        # glLoadIdentity()
+        # self.w_factor = w_factor
+        # self.h_factor = h_factor
+        # # gluPerspective(45, (1/ 2), 0.1, 50.)
 
-        glOrtho(-1*w_factor, 1*w_factor, -1*h_factor, 1*h_factor, -2, 2)
-        # glTranslatef(*self.cam_pos)
+        # glOrtho(-1*w_factor, 1*w_factor, -1*h_factor, 1*h_factor, -2, 2)
+        # # glTranslatef(*self.cam_pos)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         gluLookAt(*self.cam_pos, *self.cam_direct, *self.cam_normal_direction)

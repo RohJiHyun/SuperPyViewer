@@ -220,7 +220,7 @@ import sys
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTextEdit, QDockWidget, QListWidget)
 from PyQt5.QtCore import Qt
 from pyviewer import ui
-from pyveiwer import viewcontrolobj as vco 
+from pyviewer import viewcontrolobj as vco 
 class MainWindow(QMainWindow):
 	def __init__(self):
 		super().__init__()
@@ -247,21 +247,17 @@ class MainWindow(QMainWindow):
 	def get_list_item(self):
 		self.textEdit.setPlainText(self.listWidget.currentItem().text())
 
-if __name__ == '__main__':
-	app = QApplication(sys.argv)
 
-	window = MainWindow()
-	window.show()
-
-	sys.exit(app.exec_())
 
 
 
 
 class CustomViewer(QMainWindow):
-    def __init__(self, title, width, height, dock_widget):
+    def __init__(self, title, width, height):
+        super().__init__()
         self.resize(width, height)
         self.windows = []
+        self.world = dc.WorldContainer()
 
 
     def add_window(self,window, isdock=True):
@@ -274,7 +270,19 @@ class CustomViewer(QMainWindow):
             self.windows.append(win)
             self.addDockWidget(Qt.RightDockWidgetArea, win)
     
+    def set_data(self, V, F):
+        # self.data.append( (V,F))
+        self.world.add_data(dc.DataContainer(V, F))
+        
+    def compile(self):
+        self._initialize()
 
+
+    def _initialize(self):
+        win = vco.Window("tit")
+        win.set_world(self.world)
+        self.add_window(win)
+    
     def add_menubar(self):
         pass
 
@@ -334,10 +342,17 @@ def test_mouse_motion(e_type, x, y, window, world):
 
 if __name__ == "__main__":
     V, F = igl.read_triangle_mesh("pyviewer/cube.obj")
-    # V, F = igl.read_triangle_mesh("./cube.obj")
-    a = Viewer("title", 800, 900)
-    a.set_data(V,F)
-    a.add_mouse_down_callback(test_mouse)
-    a.add_mouse_up_callback(test_mouse_pop)
-    a.add_mouse_motion_callback(test_mouse_motion)
-    a.launch()
+    # a = Viewer("title", 800, 900)
+    # a.set_data(V,F)
+    # a.add_mouse_down_callback(test_mouse)
+    # a.add_mouse_up_callback(test_mouse_pop)
+    # a.add_mouse_motion_callback(test_mouse_motion)
+    # a.launch()
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    window = CustomViewer("hee", 800,900)
+    window.set_data(V,F)
+    window.compile()
+    window.run()
+
+    sys.exit(app.exec_())
