@@ -227,6 +227,18 @@ class Window(QOpenGLWidget):
         self.width = -1.
         self.height = -1.
 
+
+        self.factor_height = 1.0
+        self.factor_width = 1.0
+
+        self.is_mouse_pressed = False
+        self.is_background_clicked = False #(It is bocome True if Point clicked)
+        self.prev_mouse_pos = [0., 0.]
+
+        self.startTimer(100/6)
+    def timerEvent(self, event):
+        self.update()
+
     def reshape(self,x,y, w, h):
         self._set_xywh( x, y, w, h)
     
@@ -254,22 +266,29 @@ class Window(QOpenGLWidget):
 
     def draw(self):
         # glViewport(self.x, self.y, self.width, self.height)
-        print("drawing")
-        self.world.light_initialize()
-        self.camera(self.factor_width, self.factor_height)
+        # self.camera(self.factor_width, self.factor_height)
+        self.camera(1,1)
         self.world.world_draw()
     
 
 
     def initializeGL(self):
-        
+        print("init")
         glClearColor(0,0,0,0)
+        glClearDepth(1.0)
         glEnable(GL_DEPTH_TEST)
+        glShadeModel(GL_SMOOTH)
+
+        self.world.light_initialize()
+
+
+    
+
 
 
 
     def resizeGL(self, width, height):
-        glViewport(0,0,width,height)
+        # glViewport(0,0,width,height)
         
         aspect = width / float(height)
         self.proj.set_mode('ortho').set_aspect_ratio(width, height).set_angle(45.0).compile()
@@ -277,10 +296,58 @@ class Window(QOpenGLWidget):
         self.proj()
         
     def paintGL(self):
-        print("hello")
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        
         self.draw()
         glFlush()
+
+
+    def mouseMoveEvent(self, pos):
+        if self.is_mouse_pressed and self.is_background_clicked : 
+            x = pos.x()
+            y = pos.y()
+            delta_x = x  - self.prev_mouse_pos[0]
+            delta_y =  y - self.prev_mouse_pos[1]
+            self.prev_mouse_pos[0] = x 
+            self.prev_mouse_pos[1] = y
+            if delta_x > delta_y :
+                delta_y = 0.0
+            else : 
+                delta_x = 0.0
+            self.world.data_container_list[0].rotation_update( delta_x, delta_y, 0)
+
+
+
+
+
+
+    def mousePressEvent(self, pos):
+        self.is_mouse_pressed = True
+
+        ray = self.get_ray(pos.x(), pos.y())
+        fid, b_coord, closest_v_idx, t = self.world.data_container_list[0].query_ray(ray)
+        
+        if fid == -1 : 
+            self.is_background_clicked = True
+            return 
+        
+        self.world.data_container_list[0].selected_v_idx.append(closest_v_idx)
+
+
+    def mouseReleaseEvent(self, pos):
+        self.is_mouse_pressed = False 
+        self.is_background_clicked = False
+        
+        self.world.data_container_list[0].selected_v_idx.clear()
+    
+
+
+
+
+        
+
+    
+
 
 
 class Projection():
@@ -412,10 +479,12 @@ class Camera():
                 world coordinate (x,y,z) ray object
         """
         # inverse processing. display coord -> NDC coord
-        ndc_x = ((x * 2 )/ res_w - 1*self.w_factor)
-        ndc_y = -((y * 2 ) / res_h - 1*self.h_factor)
+        # ndc_x = ((x * 2 )/ res_w - 1*self.w_factor)
+        # ndc_y = -((y * 2 ) / res_h - 1*self.h_factor)
+        ndc_x = ((x * 2 )/ res_w - 1)
+        ndc_y = -((y * 2 ) / res_h - 1)
         print("view x y : ", x,y)
-        print("w_f {} w_h".format(self.w_factor,self.h_factor))
+        # print("w_f {} w_h".format(self.w_factor,self.h_factor))
         print(res_w, res_h)
         print("ndc_coord x : {} y : {}".format(ndc_x, ndc_y))
         z = 1

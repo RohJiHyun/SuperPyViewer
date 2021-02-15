@@ -9,11 +9,3 @@ class Env():
         else : 
             Env.this = Env()
             return Env.this
-
-
-
-
-
-
-    
-

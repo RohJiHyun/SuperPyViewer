@@ -72,7 +72,7 @@ class Picker():
         return reval
 
     @staticmethod
-    def toModel( coord):
+    def _toModel( coord):
         array = (GLfloat *16)()
         
         glGetFloat(GL_MODELVIEW_MATRIX, array)

@@ -265,10 +265,12 @@ class CustomViewer(QMainWindow):
             window is QT Window Object. and window_object has lisener
         """
         if isdock : 
-            win = QDockWidget(window.name, self)
-            win.setFloating(False)
-            self.windows.append(win)
-            self.addDockWidget(Qt.RightDockWidgetArea, win)
+            dock = QDockWidget(window.name, self)
+            dock.setFloating(False)
+            self.windows.append(dock)
+            self.addDockWidget(Qt.RightDockWidgetArea, dock)
+            dock.setWidget(window)
+
     
     def set_data(self, V, F):
         # self.data.append( (V,F))
@@ -289,6 +291,10 @@ class CustomViewer(QMainWindow):
     def run(self):
         self.show()
     
+
+    # def mouseMoveEvent(self, pos):
+    #     print(pos.x(), pos.y(), "pos is :")
+
 
 
 
@@ -349,6 +355,8 @@ if __name__ == "__main__":
     # a.add_mouse_motion_callback(test_mouse_motion)
     # a.launch()
 if __name__ == '__main__':
+    QApplication.setAttribute(Qt.AA_UseDesktopOpenGL)
+
     app = QApplication(sys.argv)
     window = CustomViewer("hee", 800,900)
     window.set_data(V,F)
