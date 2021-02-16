@@ -116,8 +116,8 @@ class RendererContainer():
         for idx in selected_v_idx:
             # print("draw selected", idx)
             glDisable(GL_LIGHTING)
-
             glDisable(GL_LIGHT0)
+
             glPointSize(10.0)
             # self.pickmaterial()
             glColor3f(1.0, 0.0, .0)
@@ -125,6 +125,7 @@ class RendererContainer():
 
             glVertex3fv(V[idx])
             glEnd()
+            
             glEnable(GL_LIGHTING)
             glEnable(GL_LIGHT0)
             

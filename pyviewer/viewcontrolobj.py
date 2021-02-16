@@ -239,34 +239,36 @@ class Window(QOpenGLWidget):
     def timerEvent(self, event):
         self.update()
 
-    def reshape(self,x,y, w, h):
-        self._set_xywh( x, y, w, h)
+    # def reshape(self,x,y, w, h):
+    #     self._set_xywh( x, y, w, h)
     
     def set_world(self, world):
         self.world = world
     
-    def get_ray(self, x, y):
-        return self.camera.get_ray(x,y, self.width, self.height)
+    # def get_ray(self, x, y):
+    #     print("sisisisisi size : ", )
+    #     return self.camera.get_ray(x,y, self.size().width(), self.size().height())
 
-    def _set_xywh(self, x, y, width, height):
-        # glViewport(x,y,width, height)
+    # def _set_xywh(self, x, y, width, height):
+    #     # glViewport(x,y,width, height)
         
-        cond_function = lambda x : x > 0
-        def _set_attribute(x, func):
-            if func(x):
-                return x
-        width =  _set_attribute(width, cond_function )
-        height = _set_attribute(height, cond_function )
-        self.factor_width = 1 if self.width == -1 else width/self.width
-        self.factor_height = 1 if self.width == -1 else width/self.width
-        self.width =  _set_attribute(width, cond_function )
-        self.height = _set_attribute(height, cond_function )
-        self.x = _set_attribute(x, cond_function )
-        self.y = _set_attribute(y, cond_function )
+    #     cond_function = lambda x : x > 0
+    #     def _set_attribute(x, func):
+    #         if func(x):
+    #             return x
+    #     width =  _set_attribute(width, cond_function )
+    #     height = _set_attribute(height, cond_function )
+    #     self.factor_width = 1 if self.width == -1 else width/self.width
+    #     self.factor_height = 1 if self.width == -1 else width/self.width
+    #     self.width =  _set_attribute(width, cond_function )
+    #     self.height = _set_attribute(height, cond_function )
+    #     self.x = _set_attribute(x, cond_function )
+    #     self.y = _set_attribute(y, cond_function )
 
     def draw(self):
         # glViewport(self.x, self.y, self.width, self.height)
         # self.camera(self.factor_width, self.factor_height)
+
         self.camera(1,1)
         self.world.world_draw()
     
@@ -278,43 +280,64 @@ class Window(QOpenGLWidget):
         glClearDepth(1.0)
         glEnable(GL_DEPTH_TEST)
         glShadeModel(GL_SMOOTH)
+        self.resizeGL(self.size().width(), self.size().height())
 
         self.world.light_initialize()
 
 
+
+
     
 
+    def paintGL(self):
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        self.draw()
+        glFlush()
 
 
 
     def resizeGL(self, width, height):
         # glViewport(0,0,width,height)
-        
-        aspect = width / float(height)
         self.proj.set_mode('ortho').set_aspect_ratio(width, height).set_angle(45.0).compile()
-        
         self.proj()
         
-    def paintGL(self):
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        
-        self.draw()
-        glFlush()
 
 
     def mouseMoveEvent(self, pos):
+        limit_size = 100
+        delta_rot_per_ratio = np.pi/2
+        def convert_delta_pos_to_rot(delta_x, delta_y):
+            """
+                if delta size is full width, then it convert to 3 time rotation.
+            """
+            x_rot = (abs(delta_x)/self.width )*6*np.pi
+            y_rot = (abs(delta_y)/self.height )*6*np.pi
+            return x_rot, y_rot
+
+
+
         if self.is_mouse_pressed and self.is_background_clicked : 
             x = pos.x()
             y = pos.y()
             delta_x = x  - self.prev_mouse_pos[0]
             delta_y =  y - self.prev_mouse_pos[1]
-            self.prev_mouse_pos[0] = x 
-            self.prev_mouse_pos[1] = y
-            if delta_x > delta_y :
-                delta_y = 0.0
+            if abs(delta_x) > limit_size :
+                self.prev_mouse_pos[0] = x 
+                x_rot, y_rot = convert_delta_pos_to_rot(delta_x, delta_y)
             else : 
-                delta_x = 0.0
-            self.world.data_container_list[0].rotation_update( delta_x, delta_y, 0)
+                delta_x = 1
+                x_rot = 0
+            
+
+            if abs(delta_y) > limit_size :
+                self.prev_mouse_pos[1] = y
+                x_rot, y_rot = convert_delta_pos_to_rot(delta_x, delta_y)
+            else :
+                delta_y = 1
+                y_rot = 0
+            
+            
+            self.world.data_container_list[0].rotation_update((delta_x / abs(delta_x)) * x_rot, (delta_y / abs(delta_y)) * y_rot, 0 )
 
 
 
@@ -323,10 +346,10 @@ class Window(QOpenGLWidget):
 
     def mousePressEvent(self, pos):
         self.is_mouse_pressed = True
-
-        ray = self.get_ray(pos.x(), pos.y())
-        fid, b_coord, closest_v_idx, t = self.world.data_container_list[0].query_ray(ray)
-        
+        from pyviewer import picker
+        # ray = self.get_ray(pos.x(), pos.y())
+        # fid, b_coord, closest_v_idx, t = self.world.data_container_list[0].query_ray(ray)
+        fid, b_coord, closest_v_idx, t =  picker.Picker.pick(pos.x(), pos.y(),self.size().width(), self.size().height(), self.world.data_container_list[0])
         if fid == -1 : 
             self.is_background_clicked = True
             return 
@@ -337,6 +360,8 @@ class Window(QOpenGLWidget):
     def mouseReleaseEvent(self, pos):
         self.is_mouse_pressed = False 
         self.is_background_clicked = False
+        self.prev_mouse_pos[0] = 0
+        self.prev_mouse_pos[1] = 0
         
         self.world.data_container_list[0].selected_v_idx.clear()
     
@@ -468,6 +493,7 @@ class Camera():
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         gluLookAt(*self.cam_pos, *self.cam_direct, *self.cam_normal_direction)
+        
 
         # return self.cam_pos, self.cam_direct, cam_normal_direction
 
@@ -481,6 +507,7 @@ class Camera():
         # inverse processing. display coord -> NDC coord
         # ndc_x = ((x * 2 )/ res_w - 1*self.w_factor)
         # ndc_y = -((y * 2 ) / res_h - 1*self.h_factor)
+        print(res_w, res_h, "wid, he")
         ndc_x = ((x * 2 )/ res_w - 1)
         ndc_y = -((y * 2 ) / res_h - 1)
         print("view x y : ", x,y)

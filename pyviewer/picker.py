@@ -19,6 +19,7 @@ class Picker():
     @staticmethod
     def pick(x, y, width, height, data):
         ray = Picker.get_ray(x,y, width, height)
+        print("ray", ray)
         return data.query_ray(ray)
 
 
@@ -53,11 +54,13 @@ class Picker():
             return from, to
         """
 
-        
+        print("viewport coord", x, y)
+        print("width {}, height {}".format(width, height))
         ndc_x = ((x * 2) / width - 1)
         ndc_y = -((y * 2) / height - 1)
+        print("nd x : {}, y : {}".format(ndc_x, ndc_y))
 
-        return np.arary((ndc_x, ndc_y, 0, 1)).astype(np.float),\
+        return np.array((ndc_x, ndc_y, 0, 1)).astype(np.float),\
                 np.array((0,0,1,0)).astype(np.float)
 
     @staticmethod
@@ -66,7 +69,8 @@ class Picker():
         array = (GLfloat *16)()
         
         glGetFloat(GL_PROJECTION_MATRIX, array)
-        proj = np.array(array).T
+        
+        proj = np.array(array).reshape(4,4).T
         inv_proj = np.linalg.inv(proj)
         reval = inv_proj.dot(coord)
         return reval
@@ -76,7 +80,7 @@ class Picker():
         array = (GLfloat *16)()
         
         glGetFloat(GL_MODELVIEW_MATRIX, array)
-        mview = np.array(array).T
+        mview = np.array(array).reshape(4,4).T
         inv_mview = np.linalg.inv(mview)
         reval = inv_mview.dot(coord)
         return reval
