@@ -1,6 +1,7 @@
 import numpy as np 
 from OpenGL.GL import * 
 from OpenGL.GLU import *
+from pyviewer import picker
 
 import numpy as np 
 
@@ -304,58 +305,83 @@ class Window(QOpenGLWidget):
 
 
     def mouseMoveEvent(self, pos):
-        limit_size = 100
-        delta_rot_per_ratio = np.pi/2
-        def convert_delta_pos_to_rot(delta_x, delta_y):
-            """
-                if delta size is full width, then it convert to 3 time rotation.
-            """
-            x_rot = (abs(delta_x)/self.width )*6*np.pi
-            y_rot = (abs(delta_y)/self.height )*6*np.pi
-            return x_rot, y_rot
+        # picker.Picker.getxy(pos.x(), pos.y())
+        pass
+        # limit_size = 100
+        # delta_rot_per_ratio = np.pi/2
+        # def convert_delta_pos_to_rot(delta_x, delta_y):
+        #     """
+        #         if delta size is full width, then it convert to 3 time rotation.
+        #     """
+        #     x_rot = (abs(delta_x)/self.width )*6*np.pi
+        #     y_rot = (abs(delta_y)/self.height )*6*np.pi
+        #     return x_rot, y_rot
 
 
 
-        if self.is_mouse_pressed and self.is_background_clicked : 
-            x = pos.x()
-            y = pos.y()
-            delta_x = x  - self.prev_mouse_pos[0]
-            delta_y =  y - self.prev_mouse_pos[1]
-            if abs(delta_x) > limit_size :
-                self.prev_mouse_pos[0] = x 
-                x_rot, y_rot = convert_delta_pos_to_rot(delta_x, delta_y)
-            else : 
-                delta_x = 1
-                x_rot = 0
+        # if self.is_mouse_pressed and self.is_background_clicked : 
+        #     x = pos.x()
+        #     y = pos.y()
+        #     delta_x = x  - self.prev_mouse_pos[0]
+        #     delta_y =  y - self.prev_mouse_pos[1]
+        #     if abs(delta_x) > limit_size :
+        #         self.prev_mouse_pos[0] = x 
+        #         x_rot, y_rot = convert_delta_pos_to_rot(delta_x, delta_y)
+        #     else : 
+        #         delta_x = 1
+        #         x_rot = 0
             
 
-            if abs(delta_y) > limit_size :
-                self.prev_mouse_pos[1] = y
-                x_rot, y_rot = convert_delta_pos_to_rot(delta_x, delta_y)
-            else :
-                delta_y = 1
-                y_rot = 0
+        #     if abs(delta_y) > limit_size :
+        #         self.prev_mouse_pos[1] = y
+        #         x_rot, y_rot = convert_delta_pos_to_rot(delta_x, delta_y)
+        #     else :
+        #         delta_y = 1
+        #         y_rot = 0
             
             
-            self.world.data_container_list[0].rotation_update((delta_x / abs(delta_x)) * x_rot, (delta_y / abs(delta_y)) * y_rot, 0 )
+        #     self.world.data_container_list[0].rotation_update((delta_x / abs(delta_x)) * x_rot, (delta_y / abs(delta_y)) * y_rot, 0 )
 
 
 
 
 
-
+    
     def mousePressEvent(self, pos):
-        self.is_mouse_pressed = True
-        from pyviewer import picker
-        # ray = self.get_ray(pos.x(), pos.y())
-        # fid, b_coord, closest_v_idx, t = self.world.data_container_list[0].query_ray(ray)
-        fid, b_coord, closest_v_idx, t =  picker.Picker.pick(pos.x(), pos.y(),self.size().width(), self.size().height(), self.world.data_container_list[0])
-        if fid == -1 : 
-            self.is_background_clicked = True
-            return 
+        import operator
+        # ray_near, ray_far = picker.Picker.getxy(pos.x(), pos.y())
+        # print(picker.Picker.getxy(pos.x(), pos.y()))
+        # # self.is_mouse_pressed = True
+        # # ray = self.get_ray(pos.x(), pos.y())
+        # # fid, b_coord, closest_v_idx, t = self.world.data_container_list[0].query_ray(ray)
+        # # fid, b_coord, closest_v_idx, t =  picker.Picker.pick(pos.x(), pos.y(),self.size().width(), self.size().height(), self.world.data_container_list[0])
+        # # if fid == -1 : 
+        # #     self.is_background_clicked = True
+        # #     return 
         
-        self.world.data_container_list[0].selected_v_idx.append(closest_v_idx)
+        # # self.world.data_container_list[0].selected_v_idx.append(closest_v_idx)
+        # // per-vertex
+        # for (int i = 0; i < num_vertice; i++){
+        lengths = []
+        for i, vertex in enumerate(self.world.data_container_list[0].V):
+            
+            near, far = picker.Picker.get_near_far(pos.x(), pos.y())
+            length = picker.Picker.pointToLineDistance3D(near, far, vertex)
+            lengths.append((length, i))
 
+        lengths = sorted(lengths, key=operator.itemgetter(0))
+        print(lengths)
+
+        self.world.data_container_list[0].selected_v_idx.append(lengths[0][1])
+
+
+            
+        # int v_idx = i;
+        # vector3 v = vertices[v_idx];
+        # cml::vector3d a, b; unProject(mouseX, mouseY, a, b);
+        # double len = pointToLineDistance3D(a,b, cml::vector3d(v[0],v[1],v[2]));
+        # IntFourMulitples four(j_idx,c_idx,f_idx,v_idx);
+        # distances.push_back(make_pair(four, len));
 
     def mouseReleaseEvent(self, pos):
         self.is_mouse_pressed = False 
