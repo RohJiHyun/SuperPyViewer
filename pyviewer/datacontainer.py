@@ -33,7 +33,7 @@ class WorldContainer():
     def world_draw(self):
         for d in self.data_container_list:
             d.draw()
-
+        
     def remove_world(self):
         self.reference_num -= 1
         return self
@@ -201,6 +201,8 @@ class DataContainer():
 
         # print("x : {} y : {} z : {}".format(self.rot_x, self.rot_y, self.rot_z))
         glMatrixMode(GL_MODELVIEW)
+        glPushMatrix()
+        glLoadIdentity()
         glRotatef(self.rot_z, 0, 0, 1)
         glRotatef(self.rot_y, 0, 1, 0)
         glRotatef(self.rot_x, 1, 0, 0)
@@ -208,7 +210,11 @@ class DataContainer():
 
 
         self.renderer.draw(self.V, self.F, self.material, self.selected_v_idx)
-
+        array = (GLfloat *16)()
+        
+        glGetFloat(GL_MODELVIEW_MATRIX, array)
+        self.mat = np.array(array).reshape(4,4).T        
+        glPopMatrix()
        
 
 

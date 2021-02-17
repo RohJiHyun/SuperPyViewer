@@ -1,6 +1,6 @@
 
 import sys, pygame 
-from pygame.locals import * # Local Key Value and Mod Constant initialize
+# from pygame.locals import * # Local Key Value and Mod Constant initialize
 import numpy as np 
 import logging 
 import igl
@@ -28,193 +28,189 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QTextEdit, QDockWidget, 
 from PyQt5.QtCore import Qt
 
 
-class Viewer():
+# class Viewer():
 
-    def __init__(self,title, width=300, height=400):
-        self.loop_state = False
+#     def __init__(self,title, width=300, height=400):
+#         self.loop_state = False
         
-        self.title = title
-        self.width = width
-        self.height =height
-        self.event_handler = []
-        self.callback_table = dict()
-        self.camera = np.array([0., 0., -1.])
-        self.data = []
+#         self.title = title
+#         self.width = width
+#         self.height =height
+#         self.event_handler = []
+#         self.callback_table = dict()
+#         self.camera = np.array([0., 0., -1.])
+#         self.data = []
         
-        #for test
-        self.world = dc.WorldContainer()
-        self.window = vco.Window()
-        self.window.reshape(0,0, self.width, self.height)
-    def set_data(self, V, F):
-        self.data.append( (V,F))
-        self.world.add_data(dc.DataContainer(V, F))
+#         #for test
+#         self.world = dc.WorldContainer()
+#         self.window = vco.Window()
+#         self.window.reshape(0,0, self.width, self.height)
+#     def set_data(self, V, F):
+#         self.data.append( (V,F))
+#         self.world.add_data(dc.DataContainer(V, F))
         
         
         
-
-
 
 
-    def add_keypressed_callback(self, key, callback):
-        """
+
+
+#     def add_keypressed_callback(self, key, callback):
+#         """
             
-            callback funtion input args : key value
+#             callback funtion input args : key value
             
-        """
-        self.callback_table[KEYDOWN] = self._callback_wrapper(callback)
+#         """
+#         self.callback_table[KEYDOWN] = self._callback_wrapper(callback)
 
-    def add_keyreleased_callback(self, key, callback):
-        """
+#     def add_keyreleased_callback(self, key, callback):
+#         """
             
-            callback funtion input args : key value
+#             callback funtion input args : key value
             
-        """
-        self.callback_table[KEYUP] = self._callback_wrapper(callback)
+#         """
+#         self.callback_table[KEYUP] = self._callback_wrapper(callback)
     
 
-    def _callback_wrapper(self, function):
-        def idle_funtion(flag):
-            if flag : 
-                self.loop_state = not self.loop_state
-            return 
+#     def _callback_wrapper(self, function):
+#         def idle_funtion(flag):
+#             if flag : 
+#                 self.loop_state = not self.loop_state
+#             return 
 
 
-        def my_little_function(event):
-            """
-                event 
-            """
-            if event.type in [MOUSEMOTION, MOUSEBUTTONDOWN, MOUSEBUTTONUP]:
-                return function(event.type, *event.pos, self.window, self.world)
-            elif event.type in [KEYUP, KEYDOWN]:
-                return function(event.key)
-            elif event.type == QUIT:
-                return idle_funtion(True)
-            else : 
-                return idle_funtion(False)
+#         def my_little_function(event):
+#             """
+#                 event 
+#             """
+#             if event.type in [MOUSEMOTION, MOUSEBUTTONDOWN, MOUSEBUTTONUP]:
+#                 return function(event.type, *event.pos, self.window, self.world)
+#             elif event.type in [KEYUP, KEYDOWN]:
+#                 return function(event.key)
+#             elif event.type == QUIT:
+#                 return idle_funtion(True)
+#             else : 
+#                 return idle_funtion(False)
         
-        return my_little_function
+#         return my_little_function
 
 
-    def add_mouse_motion_callback(self, callback):
-        """
-            callback : it's function.
-            callback funtion input args : (x, y)
-        """
-        self.callback_table[MOUSEMOTION] = self._callback_wrapper(callback)
+#     def add_mouse_motion_callback(self, callback):
+#         """
+#             callback : it's function.
+#             callback funtion input args : (x, y)
+#         """
+#         self.callback_table[MOUSEMOTION] = self._callback_wrapper(callback)
 
 
-    def add_mouse_down_callback(self, callback):
-        """
-            callback : it's function.
-            callback funtion input args : (x, y)
-        """
-        self.callback_table[MOUSEBUTTONDOWN] = self._callback_wrapper(callback)
+#     def add_mouse_down_callback(self, callback):
+#         """
+#             callback : it's function.
+#             callback funtion input args : (x, y)
+#         """
+#         self.callback_table[MOUSEBUTTONDOWN] = self._callback_wrapper(callback)
 
 
-    def add_mouse_up_callback(self, callback):
-        """
-            callback : it's function.
-            callback funtion input args : (x, y)
-        """
-        self.callback_table[MOUSEBUTTONUP] = self._callback_wrapper(callback)
+#     def add_mouse_up_callback(self, callback):
+#         """
+#             callback : it's function.
+#             callback funtion input args : (x, y)
+#         """
+#         self.callback_table[MOUSEBUTTONUP] = self._callback_wrapper(callback)
 
     
 
     
-    def _set_default_exit_callback(self):
-        self.callback_table[QUIT] = self._callback_wrapper(lambda : pygame.quit())
+#     def _set_default_exit_callback(self):
+#         self.callback_table[QUIT] = self._callback_wrapper(lambda : pygame.quit())
 
-    def _update_callback_keys(self):
-        return list(self.callback_table.keys())
+#     def _update_callback_keys(self):
+#         return list(self.callback_table.keys())
 
 
-    def _initialize(self):
-        self._set_default_exit_callback()
-        self.callback_keys = self._update_callback_keys()
+#     def _initialize(self):
+#         self._set_default_exit_callback()
+#         self.callback_keys = self._update_callback_keys()
         
-        pygame.init()
-        # self.screen = pygame.display.set_mode((150, 50))
-        self.screen = pygame.display.set_mode((self.width, self.height), pygame.OPENGL| pygame.DOUBLEBUF)
-        pygame.display.set_caption(self.title)
+#         pygame.init()
+#         # self.screen = pygame.display.set_mode((150, 50))
+#         self.screen = pygame.display.set_mode((self.width, self.height), pygame.OPENGL| pygame.DOUBLEBUF)
+#         pygame.display.set_caption(self.title)
 
-        # glClearColor(0.,0.,0.,0.)
-        # glShadeModel(GL_FLAT)
-        print("light on")
-        self.light = vco.Light()
-        self.light.initialize()
-        print("light_initialize", self.light)
+#         # glClearColor(0.,0.,0.,0.)
+#         # glShadeModel(GL_FLAT)
+#         print("light on")
+#         self.light = vco.Light()
+#         self.light.initialize()
+#         print("light_initialize", self.light)
       
 
-        self.material = vco.Material()
-        self.material.initialize()
-        # self.material()
+#         self.material = vco.Material()
+#         self.material.initialize()
+#         # self.material()
 
 
 
-        # Fill background
-        # background = pygame.Surface(self.screen.get_size())
-        # self.background = background.convert()
-        # self.background.fill((250, 250, 250))
+#         # Fill background
+#         # background = pygame.Surface(self.screen.get_size())
+#         # self.background = background.convert()
+#         # self.background.fill((250, 250, 250))
 
 
-        # # Display some text
-        # self.font = pygame.font.Font(None, 36)
-        # self.text = self.font.render("Hello There", 1, (10, 10, 10))
-        # self.textpos = self.text.get_rect()
-        # self.textpos.centerx = self.background.get_rect().centerx
-        # self.background.blit(self.text, self.textpos)
-        # # Blit everything to the screen
-        # self.screen.blit(background, (0, 0))
-        # pygame.display.flip()
+#         # # Display some text
+#         # self.font = pygame.font.Font(None, 36)
+#         # self.text = self.font.render("Hello There", 1, (10, 10, 10))
+#         # self.textpos = self.text.get_rect()
+#         # self.textpos.centerx = self.background.get_rect().centerx
+#         # self.background.blit(self.text, self.textpos)
+#         # # Blit everything to the screen
+#         # self.screen.blit(background, (0, 0))
+#         # pygame.display.flip()
 
-    def _finalize(self):
-        pygame.quit()
+#     def _finalize(self):
+#         pygame.quit()
 
-    def _event_hanler(self, event):
-        # print(event, "test")
-        logger.debug("event_hadler : {}".format(event.type))
-        if event.type in self.callback_keys:
-            self.callback_table[event.type](event)
+#     def _event_hanler(self, event):
+#         # print(event, "test")
+#         logger.debug("event_hadler : {}".format(event.type))
+#         if event.type in self.callback_keys:
+#             self.callback_table[event.type](event)
 
-    def _render_object(self):
+#     def _render_object(self):
 
-        self.window.draw(self.world)
+#         self.window.draw(self.world)
     
 
 
     
 
-    def _render__other_UI(self):
-        pass
+#     def _render__other_UI(self):
+#         pass
 
-    def launch(self):
-        self._initialize()
-        import time
-        # do something
-        self.loop_state = True
+#     def launch(self):
+#         self._initialize()
+#         import time
+#         # do something
+#         self.loop_state = True
         
-        # gluPerspective(45, ( self.width / self.height ), 0.1, 50.)
-        # glTranslatef(0.,0.,-5)
+#         # gluPerspective(45, ( self.width / self.height ), 0.1, 50.)
+#         # glTranslatef(0.,0.,-5)
 
 
-        while self.loop_state:
-            for event in pygame.event.get():
-                logger.debug("event is : {}".format(event))
-                self._event_hanler(event)
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-            # self.Cube()
-            self._render_object()
+#         while self.loop_state:
+#             for event in pygame.event.get():
+#                 logger.debug("event is : {}".format(event))
+#                 self._event_hanler(event)
+#             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+#             # self.Cube()
+#             self._render_object()
 
-            pygame.display.flip()
-            pygame.time.wait(10)
+#             pygame.display.flip()
+#             pygame.time.wait(10)
 
-        print("end")
-        self._finalize()
+#         print("end")
+#         self._finalize()
 
-
-
-    # def __str__(self):
-    #     return "Hello. shawnegade."
 
 import sys
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTextEdit, QDockWidget, QListWidget)

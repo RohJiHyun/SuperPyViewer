@@ -100,7 +100,7 @@ class Picker():
 
     def get3DPointFromMousePoint(mouseX, mouseY):
          ray_near, ray_far = self.unProject(mouseX, mouseY)
-         old_p =  
+         old_p =  0 # TODO tmp value.
          new_p = np.linalg.norm(old_p-ray_near)/np.linalg.norm(ray_far-ray_near)*(ray_far-ray_near) + ray_near
         #  new_p = new_p / scale_factor 
          new_p = new_p / scale_factor 
@@ -121,13 +121,21 @@ class Picker():
         return Picker.unProject(x, y)
 
     @staticmethod
-    def pick(x, y, width, height, data):
-        ray = Picker.get_ray(x,y, width, height)
+# <<<<<<< Updated upstream
+#     def pick(x, y, width, height, data):
+#         ray = Picker.get_ray(x,y, width, height)
+# =======
+    def pick(x, y, width, height, proj_mat, cam_mat, data):
+
+
+        ray = Picker.get_ray(x,y, width, height, proj_mat, cam_mat.dot(data.mat))
+        print("ray", ray)
+# >>>>>>> Stashed changes
         return data.query_ray(ray)
 
 
     @staticmethod
-    def get_ray( x, y, res_w, res_h):
+    def get_ray( x, y, res_w, res_h, proj_mat, mv_mat):
         """
         INPUT
             viewport coordinate x, y 
@@ -137,10 +145,10 @@ class Picker():
     
     # TMP TODO
         from_point, to_vector = Picker._toNormailzeCoord(x,y, res_w, res_h)
-        from_point = Picker._toEyeCoord(from_point)
-        from_point = Picker._toModel(from_point)
-        to_vector = Picker._toEyeCoord(to_vector)
-        to_vector = Picker._toModel(to_vector)
+        from_point = Picker._toEyeCoord(from_point, proj_mat)
+        from_point = Picker._toModel(from_point, mv_mat)
+        to_vector = Picker._toEyeCoord(to_vector, proj_mat)
+        to_vector = Picker._toModel(to_vector, mv_mat)
         
         ray = AABB.Ray()
         ray.set_direction(to_vector[:3])
@@ -159,29 +167,56 @@ class Picker():
 
         
         ndc_x = ((x * 2) / width - 1)
-        ndc_y = -((y * 2) / height - 1)
+# <<<<<<< Updated upstream
+#         ndc_y = -((y * 2) / height - 1)
 
-        return np.arary((ndc_x, ndc_y, 0, 1)).astype(np.float),\
-                np.array((0,0,1,0)).astype(np.float)
+#         return np.arary((ndc_x, ndc_y, 0, 1)).astype(np.float),\
+#                 np.array((0,0,1,0)).astype(np.float)
+# =======
+        # ndc_y = -((y * 2) / height - 1)
+        # ndc_y = ((y * 2) / height - 1)
+        ndc_y = (((height - y - 1) * 2) / height - 1)
+
+        print("nd x : {}, y : {}".format(ndc_x, ndc_y))
+
+        return np.array((ndc_x, ndc_y, 0, 1)).astype(np.float),\
+                np.array((0,0,-1,0)).astype(np.float)
+# >>>>>>> Stashed changes
 
     @staticmethod
-    def _toEyeCoord( coord):
+    def _toEyeCoord( coord, proj_mat):
         
-        array = (GLfloat *16)()
+        # array = (GLfloat *16)()
         
-        glGetFloat(GL_PROJECTION_MATRIX, array)
-        proj = np.array(array).T
-        inv_proj = np.linalg.inv(proj)
+# <<<<<<< Updated upstream
+#         glGetFloat(GL_PROJECTION_MATRIX, array)
+#         proj = np.array(array).T
+#         inv_proj = np.linalg.inv(proj)
+# =======
+        # glGetFloat(GL_PROJECTION_MATRIX, array)
+        # # print(list(array))
+        # proj = np.array(array).reshape(4,4).T
+        # # print("proj to eye : \n", proj)
+        inv_proj = np.linalg.inv(proj_mat)
+# >>>>>>> Stashed changes
         reval = inv_proj.dot(coord)
         return reval
 
     @staticmethod
-    def _toModel( coord):
-        array = (GLfloat *16)()
+    def _toModel( coord, mv_mat):
         
-        glGetFloat(GL_MODELVIEW_MATRIX, array)
-        mview = np.array(array).T
-        inv_mview = np.linalg.inv(mview)
+        # array = (GLfloat *16)()
+        
+# <<<<<<< Updated upstream
+#         glGetFloat(GL_MODELVIEW_MATRIX, array)
+#         mview = np.array(array).T
+#         inv_mview = np.linalg.inv(mview)
+# =======
+        # glGetFloat(GL_MODELVIEW_MATRIX, array)
+        # mview = np.array(array).reshape(4,4).T
+        # # print("eye to world : \n", mview)
+        inv_mview = np.linalg.inv(mv_mat)
+# >>>>>>> Stashed changes
         reval = inv_mview.dot(coord)
         return reval
         

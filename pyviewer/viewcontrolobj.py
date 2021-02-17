@@ -239,6 +239,7 @@ class Window(QOpenGLWidget):
         self.startTimer(100/6)
     def timerEvent(self, event):
         self.update()
+        
 
     # def reshape(self,x,y, w, h):
     #     self._set_xywh( x, y, w, h)
@@ -281,7 +282,7 @@ class Window(QOpenGLWidget):
         glClearDepth(1.0)
         glEnable(GL_DEPTH_TEST)
         glShadeModel(GL_SMOOTH)
-        self.resizeGL(self.size().width(), self.size().height())
+        # self.resizeGL(self.size().width(), self.size().height())
 
         self.world.light_initialize()
 
@@ -294,11 +295,16 @@ class Window(QOpenGLWidget):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         self.draw()
         glFlush()
-
-
+        
 
     def resizeGL(self, width, height):
         # glViewport(0,0,width,height)
+        # array = (GLfloat *16)()
+
+        # glGetFloat(GL_MODELVIEW_MATRIX, array)
+        # mview = np.array(array).reshape(4,4).T
+        # print("eye to world : \n", mview)
+        print("resize")
         self.proj.set_mode('ortho').set_aspect_ratio(width, height).set_angle(45.0).compile()
         self.proj()
         
@@ -306,41 +312,41 @@ class Window(QOpenGLWidget):
 
     def mouseMoveEvent(self, pos):
         # picker.Picker.getxy(pos.x(), pos.y())
-        pass
-        # limit_size = 100
-        # delta_rot_per_ratio = np.pi/2
-        # def convert_delta_pos_to_rot(delta_x, delta_y):
-        #     """
-        #         if delta size is full width, then it convert to 3 time rotation.
-        #     """
-        #     x_rot = (abs(delta_x)/self.width )*6*np.pi
-        #     y_rot = (abs(delta_y)/self.height )*6*np.pi
-        #     return x_rot, y_rot
+        # pass
+        limit_size = 100
+        delta_rot_per_ratio = np.pi/2
+        def convert_delta_pos_to_rot(delta_x, delta_y):
+            """
+                if delta size is full width, then it convert to 3 time rotation.
+            """
+            x_rot = (abs(delta_x)/self.width )*6*np.pi
+            y_rot = (abs(delta_y)/self.height )*6*np.pi
+            return x_rot, y_rot
 
 
 
-        # if self.is_mouse_pressed and self.is_background_clicked : 
-        #     x = pos.x()
-        #     y = pos.y()
-        #     delta_x = x  - self.prev_mouse_pos[0]
-        #     delta_y =  y - self.prev_mouse_pos[1]
-        #     if abs(delta_x) > limit_size :
-        #         self.prev_mouse_pos[0] = x 
-        #         x_rot, y_rot = convert_delta_pos_to_rot(delta_x, delta_y)
-        #     else : 
-        #         delta_x = 1
-        #         x_rot = 0
+        if self.is_mouse_pressed and self.is_background_clicked : 
+            x = pos.x()
+            y = pos.y()
+            delta_x = x  - self.prev_mouse_pos[0]
+            delta_y =  y - self.prev_mouse_pos[1]
+            if abs(delta_x) > limit_size :
+                self.prev_mouse_pos[0] = x 
+                x_rot, y_rot = convert_delta_pos_to_rot(delta_x, delta_y)
+            else : 
+                delta_x = 1
+                x_rot = 0
             
 
-        #     if abs(delta_y) > limit_size :
-        #         self.prev_mouse_pos[1] = y
-        #         x_rot, y_rot = convert_delta_pos_to_rot(delta_x, delta_y)
-        #     else :
-        #         delta_y = 1
-        #         y_rot = 0
+            if abs(delta_y) > limit_size :
+                self.prev_mouse_pos[1] = y
+                x_rot, y_rot = convert_delta_pos_to_rot(delta_x, delta_y)
+            else :
+                delta_y = 1
+                y_rot = 0
             
             
-        #     self.world.data_container_list[0].rotation_update((delta_x / abs(delta_x)) * x_rot, (delta_y / abs(delta_y)) * y_rot, 0 )
+            self.world.data_container_list[0].rotation_update((delta_x / abs(delta_x)) * x_rot, (delta_y / abs(delta_y)) * y_rot, 0 )
 
 
 
@@ -348,31 +354,49 @@ class Window(QOpenGLWidget):
 
     
     def mousePressEvent(self, pos):
-        import operator
-        # ray_near, ray_far = picker.Picker.getxy(pos.x(), pos.y())
-        # print(picker.Picker.getxy(pos.x(), pos.y()))
-        # # self.is_mouse_pressed = True
-        # # ray = self.get_ray(pos.x(), pos.y())
-        # # fid, b_coord, closest_v_idx, t = self.world.data_container_list[0].query_ray(ray)
-        # # fid, b_coord, closest_v_idx, t =  picker.Picker.pick(pos.x(), pos.y(),self.size().width(), self.size().height(), self.world.data_container_list[0])
-        # # if fid == -1 : 
-        # #     self.is_background_clicked = True
-        # #     return 
+# <<<<<<< Updated upstream
+#         import operator
+#         # ray_near, ray_far = picker.Picker.getxy(pos.x(), pos.y())
+#         # print(picker.Picker.getxy(pos.x(), pos.y()))
+#         # # self.is_mouse_pressed = True
+#         # # ray = self.get_ray(pos.x(), pos.y())
+#         # # fid, b_coord, closest_v_idx, t = self.world.data_container_list[0].query_ray(ray)
+#         # # fid, b_coord, closest_v_idx, t =  picker.Picker.pick(pos.x(), pos.y(),self.size().width(), self.size().height(), self.world.data_container_list[0])
+#         # # if fid == -1 : 
+#         # #     self.is_background_clicked = True
+#         # #     return 
         
-        # # self.world.data_container_list[0].selected_v_idx.append(closest_v_idx)
-        # // per-vertex
-        # for (int i = 0; i < num_vertice; i++){
-        lengths = []
-        for i, vertex in enumerate(self.world.data_container_list[0].V):
+#         # # self.world.data_container_list[0].selected_v_idx.append(closest_v_idx)
+#         # // per-vertex
+#         # for (int i = 0; i < num_vertice; i++){
+#         lengths = []
+#         for i, vertex in enumerate(self.world.data_container_list[0].V):
             
-            near, far = picker.Picker.get_near_far(pos.x(), pos.y())
-            length = picker.Picker.pointToLineDistance3D(near, far, vertex)
-            lengths.append((length, i))
+#             near, far = picker.Picker.get_near_far(pos.x(), pos.y())
+#             length = picker.Picker.pointToLineDistance3D(near, far, vertex)
+#             lengths.append((length, i))
+# =======
+        self.is_mouse_pressed = True
+        from pyviewer import picker
+        # ray = self.get_ray(pos.x(), pos.y())
+        # fid, b_coord, closest_v_idx, t = self.world.data_container_list[0].query_ray(ray)
+        fid, b_coord, closest_v_idx, t =  picker.Picker.pick(pos.x(), pos.y()\
+                                                            ,self.size().width()\
+                                                            ,self.size().height()\
+                                                            ,self.proj.mat, self.camera.mat,\
+                                                            self.world.data_container_list[0])
+        if fid == -1 : 
+            self.is_background_clicked = True
+            return 
+        print("closest v idx", closest_v_idx)
+        print(self.world.data_container_list[0].V[closest_v_idx])
+        self.world.data_container_list[0].selected_v_idx.append(closest_v_idx)
+# >>>>>>> Stashed changes
 
-        lengths = sorted(lengths, key=operator.itemgetter(0))
-        print(lengths)
+        # lengths = sorted(lengths, key=operator.itemgetter(0))
+        # print(lengths)
 
-        self.world.data_container_list[0].selected_v_idx.append(lengths[0][1])
+        # self.world.data_container_list[0].selected_v_idx.append(lengths[0][1])
 
 
             
@@ -447,9 +471,15 @@ class Projection():
     def _wrap_proj(self):
         def wrap_func():
             if self.mode == Projection.ORTHGONAL_MODE : 
-                glOrtho(self.left, self.right, self.top, self.bottom, self.near, self.far)
+                glOrtho(self.left, self.right, self.bottom, self.top, self.near, self.far)
+
             elif self.mode == Projection.PERSPECTIVE_MODE:
                 gluPerspective(45.0, self.aspect, 1., 100.)
+            
+            array = (GLfloat *16)()
+            glGetFloat(GL_MODELVIEW_MATRIX, array)
+            self.mat = np.array(array).reshape(4,4).T
+
         return wrap_func
 
 
@@ -458,7 +488,6 @@ class Projection():
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         self.view()
-        
 
     
         
@@ -469,8 +498,8 @@ class Camera():
     PERSPECTIVE_MODE = "perspect"
     ORTHGONAL_MODE = "ortho"
     def __init__(self):
-        self.default_cam_pos = self.cam_pos = [0.,0.,1.]
-        self.default_cam_direct = self.cam_direct = [0.,0.,-1.]
+        self.default_cam_pos = self.cam_pos = [0.,0., 1.]
+        self.default_cam_direct = self.cam_direct = [0.,0., -1.]
         self.default_cam_normal_direction = self.cam_normal_direction = [0.,1.,0.]
         self.mode = Camera.ORTHGONAL_MODE
 
@@ -518,8 +547,15 @@ class Camera():
         # # glTranslatef(*self.cam_pos)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
+        # print("cam pos : {} dir : {} normla {}".format(self.cam_pos, self.cam_direct, self.cam_normal_direction))
         gluLookAt(*self.cam_pos, *self.cam_direct, *self.cam_normal_direction)
         
+        array = (GLfloat *16)()
+        
+        glGetFloat(GL_MODELVIEW_MATRIX, array)
+        self.mat = np.array(array).reshape(4,4).T
+        # print(self.mat, "whatis mat")
+        # print("cam\n", self.mat)
 
         # return self.cam_pos, self.cam_direct, cam_normal_direction
 
