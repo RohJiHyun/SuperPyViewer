@@ -348,6 +348,8 @@ class Window(QOpenGLWidget):
             
             self.world.data_container_list[0].rotation_update((delta_x / abs(delta_x)) * x_rot, (delta_y / abs(delta_y)) * y_rot, 0 )
 
+        elif self.is_mouse_pressed and not self.is_background_clicked:
+            self.world.data_container_list[0].picked_v_update(picker.Picker.get_ray(pos.x(), pos.y(), self.size().width(), self.size().height(), self.proj.mat, self.camera.mat))
 
 
 
@@ -380,7 +382,7 @@ class Window(QOpenGLWidget):
         from pyviewer import picker
         # ray = self.get_ray(pos.x(), pos.y())
         # fid, b_coord, closest_v_idx, t = self.world.data_container_list[0].query_ray(ray)
-        fid, b_coord, closest_v_idx, t =  picker.Picker.pick(pos.x(), pos.y()\
+        fid, b_coord, closest_v_idx, t, length =  picker.Picker.pick(pos.x(), pos.y()\
                                                             ,self.size().width()\
                                                             ,self.size().height()\
                                                             ,self.proj.mat, self.camera.mat,\
@@ -414,6 +416,9 @@ class Window(QOpenGLWidget):
         self.prev_mouse_pos[1] = 0
         
         self.world.data_container_list[0].selected_v_idx.clear()
+
+
+
     
 
 
@@ -559,80 +564,6 @@ class Camera():
 
         # return self.cam_pos, self.cam_direct, cam_normal_direction
 
-    def get_ray(self, x, y, res_w, res_h):
-        """
-            INPUT
-                viewport coordinate x, y 
-            Return
-                world coordinate (x,y,z) ray object
-        """
-        # inverse processing. display coord -> NDC coord
-        # ndc_x = ((x * 2 )/ res_w - 1*self.w_factor)
-        # ndc_y = -((y * 2 ) / res_h - 1*self.h_factor)
-        print(res_w, res_h, "wid, he")
-        ndc_x = ((x * 2 )/ res_w - 1)
-        ndc_y = -((y * 2 ) / res_h - 1)
-        print("view x y : ", x,y)
-        # print("w_f {} w_h".format(self.w_factor,self.h_factor))
-        print(res_w, res_h)
-        print("ndc_coord x : {} y : {}".format(ndc_x, ndc_y))
-        z = 1
-        # z = -1
-        # NDC coord -> projection 
-        
-        # projection -> cam coord
-        Lookatcam = np.eye(4,4)
-        array = (GLfloat *16)()
-        
-        glGetFloat(GL_PROJECTION_MATRIX, array)
-        toeye = np.array(array).reshape(4,4)
-        toeye = np.linalg.inv(toeye.T)
-        array2 = (GLfloat *16)()
-
-        glGetFloat(GL_MODELVIEW_MATRIX, array2)
-        toworld = np.array(array2).reshape(4,4)
-        toworld = np.linalg.inv(toworld.T)
-
-
-        Lookatcam[0, :-1] = np.cross( np.array(self.cam_direct), np.array(self.cam_normal_direction))
-        # Lookatcam[0, :-1] = np.cross( np.array(self.cam_normal_direction), np.array(self.cam_direct) )
-        Lookatcam[1, :-1] = np.array(self.cam_normal_direction)
-        Lookatcam[2, :-1] = np.array(self.cam_direct) 
-        # print(Lookatcam, "look_rot")
-
-        Lookatpos = np.eye(4,4)
-        Lookatpos[:-1, -1] = - np.array(self.cam_pos)
-
-        # print(Lookatpos, "lookpos")
-
-        Looks = Lookatcam.dot(Lookatpos)
-        inv_Lat = np.linalg.inv(Looks)
-        
-        # print(Looks, "looks")
-        # print(inv_Lat, "inv_looks")
-
-        # direction = inv_Lat.dot(np.array([ndc_x, ndc_y, z, 0]))
-        direction = inv_Lat.dot(np.array([0, 0, z, 0]))
-        # pos = inv_Lat.dot(np.array([0.0, 0.0, 0.0, 1.0 ]))
-        pos = inv_Lat.dot(np.array([ndc_x, ndc_y, 0.0, 1.0 ]))
-        
-        # TMP TODO
-        direction =toworld.dot(toeye.dot(np.array([0, 0, z, 0])))
-        # pos =toworld.dot(toeye.dot(np.array([ndc_x,ndc_y,0.0, 1])))
-        pos =toworld.dot(toeye.dot(np.array([ndc_x,ndc_y,0.0, 1.])))
-        
-
-        reval = AABB.Ray()
-        reval.set_pos(pos[:3])
-        # import copy
-        # ss = copy.deepcopy(direction[:3])
-        # ss[-1] = pos[:3][-1]
-        # reval.set_pos(ss)
-
-        reval.set_direction(direction[:3])
-        print("ray val", reval)
-        return reval
-        
 
 
 

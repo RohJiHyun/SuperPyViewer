@@ -8,6 +8,7 @@ from OpenGL.GLU import *
 import time
 import os 
 from pyviewer import transforms as trans
+from pyviewer import picker 
 
 class WorldContainer():
     def __init__(self):
@@ -166,7 +167,10 @@ class DataContainer():
         self.F = F
         raise NotImplementedError()
         
-        
+    def picked_v_update(self, ray):
+        idx = self.selected_v_idx[0]
+        new_v = picker.Picker.point_edit(ray, self.mat, self.V[ idx ] )
+        self.V[idx] = new_v
 
     def update_data(self, updated_data):
         self.data = updated_data
@@ -231,11 +235,11 @@ class DataContainer():
         # ray.direction = np.linalg.inv(rot_composite.matrix ).dot( ray.direction)
         # ray.pos = np.linalg.inv(rot_composite.matrix ).dot(ray.pos)
 
-        fid, b_coord, fid_vid,t = self.aabb.ray_intersect(ray)
+        fid, b_coord, fid_vid,t, length = self.aabb.ray_intersect(ray)
         if fid == -1:
-            return -1, -1, -1, -1
+            return -1, -1, -1, -1, -1
         v_id = self.F[fid][fid_vid]
         print("f_id : {}, f_v_idx : {},\nF[fid] : {}\n v_id : {}".format(fid, fid_vid,self.F[fid], v_id))
         print("v1 : {}\nv2 : {}\nv3 : {}".format(self.V[self.F[fid][0]], self.V[self.F[fid][1]],self.V[self.F[fid][2]]))
-        return fid, b_coord, v_id, t
+        return fid, b_coord, v_id, t, length
 

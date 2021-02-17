@@ -97,13 +97,37 @@ class Picker():
     # distances.push_back(make_pair(four, len));
     # }  
 
+    @staticmethod
+    def point_edit(ray, m_mat, old_p):
+        ray_near = np.array([1.,1.,1.,1.])
+        ray_far = np.array([1., 1., 1., 0.])
+        
+        ray_near[:3] = ray.pos 
+        ray_far[:3] = ray.direction
 
-    def get3DPointFromMousePoint(mouseX, mouseY):
-         ray_near, ray_far = self.unProject(mouseX, mouseY)
-         old_p =  0 # TODO tmp value.
-         new_p = np.linalg.norm(old_p-ray_near)/np.linalg.norm(ray_far-ray_near)*(ray_far-ray_near) + ray_near
+        ray_near, ray_far = m_mat.dot(ray_near)[:3] , m_mat.dot(ray_far)[:3]
+        
+        old_p =  old_p
+        print("old p", old_p)
+        # new_p = np.linalg.norm(old_p-ray_near)*(ray_far-ray_near)/np.linalg.norm(ray_far-ray_near) + ray_near
+        old_vec = old_p-ray_near
+        new_vec = ray_far-ray_near
+        t_size = old_vec.dot(new_vec)/(np.linalg.norm(new_vec))
+        new_p = t_size*(new_vec/ np.linalg.norm(new_vec) ) + ray_near
+        print("new p", new_p)
         #  new_p = new_p / scale_factor 
-         new_p = new_p / scale_factor 
+        # new_p = new_p / scale_factor 
+        return new_p
+        
+
+    @staticmethod
+    def get3DPointFromMousePoint(mouseX, mouseY):
+        ray_near, ray_far = self.unProject(mouseX, mouseY)
+        old_p = 1 # old vertex point
+        new_p = np.linalg.norm(old_p-ray_near)/np.linalg.norm(ray_far-ray_near)*(ray_far-ray_near) + ray_near
+        #  new_p = new_p / scale_factor 
+        new_p = new_p / scale_factor 
+    
     
     @staticmethod
     def get_near_far(mouseX, mouseY):
@@ -161,7 +185,6 @@ class Picker():
         """
             Pygame viewport coord left   top   is (0,0)
                                   bottom right is X_max, Y_Max
-
             return from, to
         """
 
@@ -219,4 +242,3 @@ class Picker():
 # >>>>>>> Stashed changes
         reval = inv_mview.dot(coord)
         return reval
-        
