@@ -1,82 +1,153 @@
 import sys
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QTextEdit, QDockWidget, QListWidget)
+from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 
-class UIListener():
-    """
-        type
-        user_type
-        ui_element
-        ui_object_id
-    """
-    def __init__(self):
-        self.callback = None 
-
-    def add_click_callback(self, func):
-        self.callback = func
+def idle():
+    pass
 
 
+MENU_BAR =      {
+                'file' : 
+                        {
+                            'new' : {'shortcut' : 'Ctrl+N', 'tip' : ""},
+                            'open' : {'shortcut' : 'Ctrl+N', 'tip' : ""}
+                        },
+                'edit' : 
+                        {
+
+                        }
+
+                }
+
+BASE_INSPECTER = {
+                    "name"                   : [{"widget" : QLabel, "args" : [""]}],
+                    "rotation"               : [{"widget" : QLineEdit, "args" :["0.0"]}, {"widget" : QLineEdit, "args" :["0.0"]}, {"widget" : QLineEdit, "args" :["0.0"]}], #for X,Y,Z
+                    "vertice"                : [{"widget" : QLabel, "args" : ["0"]}],
+                    "face"                   : [{"widget" : QLabel, "args" : ["0"]}],
+                    "selected vertex number" : [{"widget" : QLabel, "args" :["None"]}],
+                    "sharable"               : [{"widget" : QComboBox, "args" :[]}]
+
+
+                 }
+
+STATUS_BAR = {
+                "mouse_x" :{"widget"},
+                "mouse_y" : {},
+                "mouse_status" :{},
+                "camera pos" : {},
+                "camera_rotation" : {}
+}
+
+
+
+class BaseUI():
+    def __init__(self, parent):
+        super().__init__()
+        self.parent = parent
+        self.mapping_table = dict()
+
+    def initUI(self):
+        pass
+
+    def add_to_mapping_table(self, key, obj):
+        """
+            regist ui component to mapping_table
+            return back ui component obejct.
+        """
+        if key in self.mapping_table.keys():
+            self.mapping_table[key].append(obj)    
+        else : 
+            self.mapping_table[key] = []
+        
+        return obj
+
+    def get_ui_component(self, key):
+        """
+            
+            each element in mapping table is list of components. 
+            using it to connect signal.
+            recommend implementing it in controller class.
+            
+            return mapping_table elements : list
+        """
+        reval = []
+        if key in self.mapping_table.keys():
+            reval = self.mapping_table[key]
+        return reval
+class BaseUIMenuBar(BaseUI):
+    def __init__(self, parent):
+        super().__init__(parent=parent)
+
+    def initUI(self):
+        pass
+    
+    def init_file_action_group(self):
+        pass
+
+    def init_edit_action_group(self):
+        pass
+
+    
+class UIMenuBar(BaseUIMenuBar):
+    def __init__(self, parent):
+        super().__init__(parent=parent)
+
+    def initUI(self):
+        self.menubar = self.parent.menuBar()
+        self.menubar.setNativeMenuBar(False)
+        for menu_key in MENU_BAR:
+            p_menu = self.menubar.addMenu(menu_key)
+            self.init_action_group(menu_key, p_menu)
+
+    def init_action_group(self, key_name, parent_menu):
+        topic = MENU_BAR['file']
+        for key in topic:
+
+            component = QAction(key, self.parent)
+            component.setShortcut(topic[key]['shortcut'])
+            component.setStatusTip(topic[key]['tip'])
+            # file_action.triggerd.connect(topic[key]['callback'])
+            # component.triggered.connect((qApp.quit))
+            self.add_to_mapping_table(key, component)
+
+            parent_menu.addAction(component)
+
+        
 #TODO ANIMATION UI CONTROLL CLASS
-class ToolBarUI(QDockWidget):
-    pass
-class AnimeStatusBarUI(QDockWidget):
-    pass
+class BaseInspectorUI(BaseUI):
+    def __init__(self, parent):
+        super().__init__(parent=parent)
 
 
-
-
-
-# class MainUI(QDockWidget):
-#     def __init__(self, title, x, y, width, height):
-#         self.x = x 
-#         self.y = y 
-#         self.width = width 
-#         self.height = height
-#         self.auto = True
-
-
-#         # Main Panel for attch program \
-#         self.panel = pygame_gui.elements.ui_panel()
-
-#         # Name | file_name
-#         self.status_bar = pygame_gui.elements.
-#         # translate pos box
-#         self.xyz_editor = pygame_gui.elements.
-#         # X Y Z rotation 
-#         self.xyz_rotation_editor = pygame_gui.elements. 
-#         # AABB Box
-#         self.visible_bbox = pygame_gui.elements.UIButton(
-#                                                         relative_rect=pygame.Rect((0,0),(20,20)),
-#                                                         text = "Visible",
-#                                                         manager = self.manager
-
-#                                                         )
-
+class InspectorUI(BaseInspectorUI):
+    def __init__(self, parent, name="inspector"):
+        super().__init__(parent=parent)
+        self.name = name
     
 
-#         self.click_callback = UIListener()
+    def initUI(self):
+        self.make_outter_layout()
+        self.parent.add_window(self.outter_layout, isdock=True, name=self.name)
+
+    def make_outter_layout(self):
+        self.outter_layout = QVBoxLayout()
+        for key in BASE_INSPECTER:
+            inner_comp = self.make_inner_layout(key)
+            self.outter_layout.addLayout(inner_comp)
 
 
-#     def resize(self, x,y,width, height):
-#         pass
-    
-#     def set_layout(self, auto = True):
-#         """
-#             if auto is True, stack UI.
-#         """
-#         self.auto = auto
-#         if auto :
-#             pass
+    def make_inner_layout(self, key):
+        layout = QHBoxLayout()
+        layout.addWidget(QLabel(key))
         
-#     def update(self):
-#         pass
-    
-#     def attach(self, surface):
-#         surface.
-
-#     def detach(self):
-#         pass
-
-#     def draw(self):
-#         pass
+        for obj in BASE_INSPECTER[key]: #list of objects to inflate.
+            inflated_ui = obj['widget'](*obj['args'], self.parent)
+            self.add_to_mapping_table(key, inflated_ui)
+            # self.mapping_table[key].append(inflated_ui)
+            layout.addWidget(inflated_ui)
         
+        return layout
+
+
+
+
