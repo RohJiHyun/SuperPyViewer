@@ -95,7 +95,6 @@ class RendererContainer():
         if self.draw_mesh_opt:
             # material()
             glColor3f(1.0, 1.0, 1.0)
-            glColor3f(1.0, 1.0, 1.0)
             _draw(GL_TRIANGLES)
         
         # if self.draw_line_opt : 
@@ -118,7 +117,7 @@ class RendererContainer():
             # print("draw selected", idx)
             glDisable(GL_LIGHTING)
             glDisable(GL_LIGHT0)
-
+            glDisable(GL_DEPTH_TEST)
             glPointSize(10.0)
             # self.pickmaterial()
             glColor3f(1.0, 0.0, .0)
@@ -129,6 +128,7 @@ class RendererContainer():
             
             glEnable(GL_LIGHTING)
             glEnable(GL_LIGHT0)
+            glEnable(GL_DEPTH_TEST)
             
         # glDisable(GL_COLOR_MATERIAL)
 

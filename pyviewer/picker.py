@@ -104,16 +104,18 @@ class Picker():
         
         ray_near[:3] = ray.pos 
         ray_far[:3] = ray.direction
-
+        m_mat = np.linalg.inv(m_mat)
         ray_near, ray_far = m_mat.dot(ray_near)[:3] , m_mat.dot(ray_far)[:3]
-        print(ray)
+        print("ray : ", ray)
+        print("ray pos : {} ray dir {}".format( ray_near, ray_far))
         old_p =  old_p
         print("old p", old_p)
         # new_p = np.linalg.norm(old_p-ray_near)*(ray_far-ray_near)/np.linalg.norm(ray_far-ray_near) + ray_near
         old_vec = old_p-ray_near
         new_vec = ray_far-ray_near
-        t_size = old_vec.dot(new_vec)/(np.linalg.norm(new_vec))
-        new_p = t_size*(new_vec/ np.linalg.norm(new_vec) ) + ray_near
+        # t_size = old_vec.dot(new_vec)/(np.linalg.norm(new_vec))
+        t_size = old_vec.dot(ray_far)/(np.linalg.norm(ray_far))
+        # new_p = t_size*(new_vec/ np.linalg.norm(new_vec) ) + ray_near
         new_p = t_size*(ray_far/ np.linalg.norm(ray_far) ) + ray_near
         print("new p", new_p)
         #  new_p = new_p / scale_factor 

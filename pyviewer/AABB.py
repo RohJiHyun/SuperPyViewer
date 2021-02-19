@@ -62,7 +62,7 @@ class AABBLeaf(BaseTree):
         X = 0
         Y = 1
         Z = 2
-        print(v1[X], v2[X], v3[X])
+        # print(v1[X], v2[X], v3[X])
         self.x_min = min(v1[X], v2[X], v3[X])
         self.x_max = max(v1[X], v2[X], v3[X])
         self.y_min = min(v1[Y], v2[Y], v3[Y])
@@ -239,8 +239,8 @@ class AABBTree(BaseTree):
             # f_idx, face_idx := {v_idx1, v_idx2, v_idx3}
 
             aabb_leaf_list.append(AABBLeaf().add_data(f_idx, *self.V[face_v_idx]))
-            print("todo")
-        print("apple wha", aabb_leaf_list)
+            # print("todo")
+        # print("apple wha", aabb_leaf_list)
 
 
         self.insert_primitive(aabb_leaf_list)

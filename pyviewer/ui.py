@@ -42,7 +42,7 @@ STATUS_BAR = {
 
 class BaseUI():
     def __init__(self, parent):
-        super().__init__()
+        # super().__init__(parent=parent)
         self.parent = parent
         self.mapping_table = dict()
 
@@ -54,10 +54,9 @@ class BaseUI():
             regist ui component to mapping_table
             return back ui component obejct.
         """
-        if key in self.mapping_table.keys():
-            self.mapping_table[key].append(obj)    
-        else : 
+        if key not in self.mapping_table.keys():
             self.mapping_table[key] = []
+        self.mapping_table[key].append(obj)
         
         return obj
 
@@ -117,36 +116,65 @@ class UIMenuBar(BaseUIMenuBar):
 class BaseInspectorUI(BaseUI):
     def __init__(self, parent):
         super().__init__(parent=parent)
+        self.docking_area = Qt.RightDockWidgetArea
+
+    def set_size_constraint(self, layout):
+        # layout.resize(0,0)
+        pass
 
 
 class InspectorUI(BaseInspectorUI):
     def __init__(self, parent, name="inspector"):
         super().__init__(parent=parent)
         self.name = name
+        self.window = QWidget(parent)
     
 
     def initUI(self):
         self.make_outter_layout()
-        self.parent.add_window(self.outter_layout, isdock=True, name=self.name)
+        self.parent.add_window(self.window, isdock=True, name=self.name, allowed_area = self.docking_area)
 
     def make_outter_layout(self):
-        self.outter_layout = QVBoxLayout()
+        # self.outter_layout = QVBoxLayout()
+        self.outter_layout = QFormLayout()
         for key in BASE_INSPECTER:
-            inner_comp = self.make_inner_layout(key)
-            self.outter_layout.addLayout(inner_comp)
+            # inner_comp = self.make_inner_layout(key)
+            # self.outter_layout.addLayout(inner_comp)
+            comp_name, comp = self.make_inner_layout(key)
+            self.outter_layout.addRow(comp_name, comp)
+
+        self.set_size_constraint(self.outter_layout)
+
+
+        self.outter_layout.setSizeConstraint(QLayout.SetMinimumSize)
+        self.window.setLayout(self.outter_layout)
+        # self.outter_layout.setHorizontalSpacing(0)
 
 
     def make_inner_layout(self, key):
+        # layout = QHBoxLayout()
+        # layout.addWidget(QLabel(key))
+        
+        # for obj in BASE_INSPECTER[key]: #list of objects to inflate.
+        #     inflated_ui = obj['widget'](*obj['args'], self.parent)
+        #     self.add_to_mapping_table(key, inflated_ui)
+        #     # self.mapping_table[key].append(inflated_ui)
+        #     layout.addWidget(inflated_ui)
+            
+        
+        # return layout
         layout = QHBoxLayout()
-        layout.addWidget(QLabel(key))
+        
         
         for obj in BASE_INSPECTER[key]: #list of objects to inflate.
             inflated_ui = obj['widget'](*obj['args'], self.parent)
             self.add_to_mapping_table(key, inflated_ui)
             # self.mapping_table[key].append(inflated_ui)
             layout.addWidget(inflated_ui)
-        
-        return layout
+            
+        self.set_size_constraint(layout)
+
+        return QLabel(key), layout
 
 
 

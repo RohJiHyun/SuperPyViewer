@@ -240,6 +240,7 @@ class Window(QOpenGLWidget):
     def timerEvent(self, event):
         self.update()
         
+        
 
     # def reshape(self,x,y, w, h):
     #     self._set_xywh( x, y, w, h)
@@ -293,6 +294,7 @@ class Window(QOpenGLWidget):
 
     def paintGL(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        
         self.draw()
         glFlush()
         
@@ -304,7 +306,7 @@ class Window(QOpenGLWidget):
         # glGetFloat(GL_MODELVIEW_MATRIX, array)
         # mview = np.array(array).reshape(4,4).T
         # print("eye to world : \n", mview)
-        print("resize")
+        print("resize" , width, height)
         self.proj.set_mode('ortho').set_aspect_ratio(width, height).set_angle(45.0).compile()
         self.proj()
         
@@ -437,8 +439,10 @@ class Projection():
         
         self.mode = Projection.ORTHGONAL_MODE
         
-        self.width = 1.
-        self.height = 1.
+        self.width = -1
+        self.height = -1
+        self.width_factor = 1.0
+        self.height_factor = 1.0
         self.aspect = self.width / self.height
         self.angle = 45.0
 
@@ -459,10 +463,16 @@ class Projection():
         return self
     
     def set_aspect_ratio(self, width, height):
-        self.width = width 
+        
 
-        self.hegith = height 
-        self.aspect = width/float(height)
+        if self.width == -1 or self.height == -1 :
+            self.width = width
+            self.height = height
+        self.width_factor = width / self.width
+        self.height_factor = height / self.height
+        self.aspect = width/height
+
+        
 
         return self
 
@@ -476,7 +486,9 @@ class Projection():
     def _wrap_proj(self):
         def wrap_func():
             if self.mode == Projection.ORTHGONAL_MODE : 
-                glOrtho(self.left, self.right, self.bottom, self.top, self.near, self.far)
+                glOrtho(self.left *  self.aspect, self.right * self.aspect,\
+                        self.bottom , self.top,\
+                        self.near, self.far)
 
             elif self.mode == Projection.PERSPECTIVE_MODE:
                 gluPerspective(45.0, self.aspect, 1., 100.)
