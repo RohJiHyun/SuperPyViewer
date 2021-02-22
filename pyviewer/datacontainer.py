@@ -139,11 +139,11 @@ class RendererContainer():
 
 import ctypes 
 import  OpenGL.arrays.vbo as glvbo # For GL VAO VBO
-
+import sys
 class Renderer2():
     def __init__(self, V, F):
-        self.vertex = V
-        self.face = F 
+        self.vertex = V.astype('float64').ravel()
+        self.face = F.astype('int32').ravel()
         # self.vertex_and_normal = self.calc_normal()
         
         # self.vertex_and_normal = np.concatenate([self.vertex, self.vertex_and_normal], axis = -1)
@@ -174,36 +174,74 @@ class Renderer2():
         
 
     def compile(self):
-        self.vao = glGenVertexArrays(1)
-        glBindVertexArray(self.vao)
+        print(self.vertex)
+        # self.vbo= GLuint(0)
+        # glGenBuffers(1, self.vbo)
+        # glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+        # print("hey wow", self.vertex.nbytes)
         
-        self.vertex_buffer_object_f_idx = glvbo.VBO(self.face)
-        self.vertex_buffer_object_f_idx.bind()
+        # glBufferData(GL_ARRAY_BUFFER, self.vertex.nbytes, self.vertex, GL_STREAM_DRAW)
+        # glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+        
+        # self.ebo= GLuint(0)
+        # glGenBuffers(1, self.ebo)
+        # glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ebo)
+        # print("hey wow", self.face.nbytes)
+        # print("hey wow", self.face)
+        # glBufferData(GL_ELEMENT_ARRAY_BUFFER, self.face.nbytes, self.face, GL_STATIC_DRAW)
+        # glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ebo)
+
+
+
+        # glEnableClientState(GL_VERTEX_ARRAY)
+        # glVertexPointer(3, GL_FLOAT, 0, None)
+        # glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+
+        # self.vertex_buffer_object_f_idx = glvbo.VBO(self.face)
+        # self.vertex_buffer_object_f_idx.bind()
         self.vertex_buffer_object_v_idx =  glvbo.VBO(self.vertex)
         self.vertex_buffer_object_v_idx.bind()
         
 
+
+        self.vao= GLuint(0)
+        glGenVertexArrays(1, self.vao)
+        glBindVertexArray(self.vao)
+
         glEnableClientState(GL_VERTEX_ARRAY)
-        # glEnableClientState(GL_NORMAL_ARRAY)
-        # glEnableClientState(GL_NORMAL_ARRAY)
+
 
         buffer_offset = ctypes.c_void_p
         # stride = (3+3)*self.vertex.itemsize
         stride = (3)*self.vertex.itemsize
 
         # glVertexPointer(3, GL_FLOAT, stride, None )
+        # glVertexPointer(3, GL_FLOAT, 0, None )
         glVertexPointer(3, GL_FLOAT, 0, None )
         # glNormalPointer(3, GL_FLOAT, stride, buffer_offset(12))
 
         glBindVertexArray(0)
+    def __del__(self):
+        if hasattr(self, 'vbo'):
+            glDeleteBuffers(1, self.vbo)
 
     def change_vertex_data(self, v, idx):
         pass
 
     def draw(self, *args, **kwargs):
+        # glBindVertexArray(self.vao)
+        # glDrawElements(GL_TRIANGLES, len(self.face), GL_UNSIGNED_INT, self.face)
+        # glBindVertexArray(0)
+        # glEnableClientState(GL_VERTEX_ARRAY)
+        # glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+        # glDrawArrays(GL_TRIANGLES, 0, len(self.vertex))
+        # print(len(self.face)//3, "counts")
+        # glDrawElements(GL_TRIANGLES, len(self.face)//3, GL_UNSIGNED_INT, None)
+
         glBindVertexArray(self.vao)
-        glDrawElements(GL_TRIANGLES, len(self.face), GL_UNSIGNED_INT, self.face)
+        glDrawArrays(GL_TRIANGLES, 0, len(self.face)//3)
         glBindVertexArray(0)
+        # glDisableClientState(GL_VERTEX_ARRAY)
 
         
 
@@ -242,7 +280,7 @@ class DataContainer():
         """
         self.V = V
         self.F = F
-        raise NotImplementedError()
+        # raise NotImplementedError()
         
     def picked_v_update(self, ray):
         idx = self.selected_v_idx[0]
