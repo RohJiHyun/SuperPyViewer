@@ -3,8 +3,8 @@ from pyviewer import viewcontrolobj as vco
 from pyviewer import AABB
 
 from OpenGL.GL import * 
-
 from OpenGL.GLU import *
+# from OPenGL.arryas import *
 import time
 import os 
 from pyviewer import transforms as trans
@@ -39,7 +39,7 @@ class WorldContainer():
         self.reference_num -= 1
         return self
 
-
+from pyviewer import utils
 class RendererContainer():
     """
         Fixed render time Based
@@ -67,14 +67,16 @@ class RendererContainer():
         self.draw_mesh_opt = draw_mesh_opt
         self.draw_point_opt = draw_point_opt
 
+
+    @utils.print_time
     def draw(self, V, F, material = None, selected_v_idx = []):
         def calc_face_normal(idx1, idx2, idx3):
-            # print("idx is {} {} {} ".format(idx1, idx2, idx3))
+
             edge1 = V[idx2] - V[idx1]
             edge2 = V[idx3] - V[idx1]
             normal_vector = np.cross(edge1, edge2)
             glNormal3fv(list(normal_vector))
-        # material = lambda : -1 if (material == None) else material
+
         
         def _draw(enum):
             
@@ -82,7 +84,7 @@ class RendererContainer():
                 glBegin(enum)
 
 
-                calc_face_normal(*v_indice)
+                # calc_face_normal(*v_indice)
 
                 for v_idx in v_indice:
 
@@ -114,12 +116,12 @@ class RendererContainer():
 
          
         for idx in selected_v_idx:
-            # print("draw selected", idx)
+
             glDisable(GL_LIGHTING)
             glDisable(GL_LIGHT0)
             glDisable(GL_DEPTH_TEST)
             glPointSize(10.0)
-            # self.pickmaterial()
+
             glColor3f(1.0, 0.0, .0)
             glBegin(GL_POINTS)
 
@@ -130,18 +132,90 @@ class RendererContainer():
             glEnable(GL_LIGHT0)
             glEnable(GL_DEPTH_TEST)
             
-        # glDisable(GL_COLOR_MATERIAL)
 
-        delta = time.time() - start_t
-        if delta < self.limit_time_per_update :
-            time.sleep( self.limit_time_per_update - delta )
-            
+        # delta = time.time() - start_t
+        # if delta < self.limit_time_per_update :
+        #     time.sleep( self.limit_time_per_update - delta )
+
+import ctypes 
+import  OpenGL.arrays.vbo as glvbo # For GL VAO VBO
+
+class Renderer2():
+    def __init__(self, V, F):
+        self.vertex = V
+        self.face = F 
+        # self.vertex_and_normal = self.calc_normal()
+        
+        # self.vertex_and_normal = np.concatenate([self.vertex, self.vertex_and_normal], axis = -1)
+
+        
+
+
+
+
+        pass
+        # glBindBuffer()
+
+    def calc_normal_each_v(self, v_idx1, v_idx2, v_idx3):
+        
+        edge1 = self.vertex[v_idx2] - self.vertex[v_idx1]
+        edge2 = self.vertex[v_idx3] - self.vertex[v_idx1]
+        normal_vector = np.cross(edge1, edge2)
+        return normal_vector/np.linalg.norm(normal_vector)
+
+
+    def calc_normal(self):
+        f_norms = []
+        for indice in self.face : 
+            f_norm = self.calc_normal_each_v(*indice)
+            f_norms.append(f_norm)
+        
+        return np.array(f_norms)
+        
+
+    def compile(self):
+        self.vao = glGenVertexArrays(1)
+        glBindVertexArray(self.vao)
+        
+        self.vertex_buffer_object_f_idx = glvbo.VBO(self.face)
+        self.vertex_buffer_object_f_idx.bind()
+        self.vertex_buffer_object_v_idx =  glvbo.VBO(self.vertex)
+        self.vertex_buffer_object_v_idx.bind()
+        
+
+        glEnableClientState(GL_VERTEX_ARRAY)
+        # glEnableClientState(GL_NORMAL_ARRAY)
+        # glEnableClientState(GL_NORMAL_ARRAY)
+
+        buffer_offset = ctypes.c_void_p
+        # stride = (3+3)*self.vertex.itemsize
+        stride = (3)*self.vertex.itemsize
+
+        # glVertexPointer(3, GL_FLOAT, stride, None )
+        glVertexPointer(3, GL_FLOAT, 0, None )
+        # glNormalPointer(3, GL_FLOAT, stride, buffer_offset(12))
+
+        glBindVertexArray(0)
+
+    def change_vertex_data(self, v, idx):
+        pass
+
+    def draw(self, *args, **kwargs):
+        glBindVertexArray(self.vao)
+        glDrawElements(GL_TRIANGLES, len(self.face), GL_UNSIGNED_INT, self.face)
+        glBindVertexArray(0)
+
+        
+
+
 
 class DataContainer():
+    
     """
         based on local coord 
     """
-    def __init__(self, V, F, pos=[0.0,0.0,0.0]):
+    
+    def __init__(self, V, F, pos=[0.0, 0.0, 0.0]):
         self.pos = np.array(pos)
         self.rot_x = 0.0
         self.rot_y = 0.0
@@ -155,6 +229,9 @@ class DataContainer():
         self.is_initialized = False
         self.aabb = AABB.AABBTree()
         self.renderer = RendererContainer(True, True, False)
+        self.compile_flag = False
+        self.renderer = Renderer2(self.V, self.F)
+        # self.renderer.compile()
         self.aabb.insert_entity(self.V, self.F)
         
 
@@ -202,6 +279,9 @@ class DataContainer():
         # self.rot_x = 3
         # self.rot_y = 3
         # self.rot_z = 3
+        if not self.compile_flag :
+            self.compile_flag = True
+            self.renderer.compile()
 
         # print("x : {} y : {} z : {}".format(self.rot_x, self.rot_y, self.rot_z))
         glMatrixMode(GL_MODELVIEW)

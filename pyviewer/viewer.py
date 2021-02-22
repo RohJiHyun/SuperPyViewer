@@ -110,8 +110,8 @@ class CustomViewer(QMainWindow):
 
 
 if __name__ == "__main__":
+    V, F = igl.read_triangle_mesh("pyviewer/cube.ply")
     # V, F = igl.read_triangle_mesh("pyviewer/cube.obj")
-    V, F = igl.read_triangle_mesh("pyviewer/cube.obj")
     # a = Viewer("title", 800, 900)
     # a.set_data(V,F)
     # a.add_mouse_down_callback(test_mouse)

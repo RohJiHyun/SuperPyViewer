@@ -208,6 +208,7 @@ class RootWindow():
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QOpenGLWidget, QTextEdit, QDockWidget, QListWidget)
 from PyQt5.QtCore import Qt
 
+from pyviewer import utils
 
 class Window(QOpenGLWidget):
     """
@@ -237,6 +238,7 @@ class Window(QOpenGLWidget):
         self.prev_mouse_pos = [0., 0.]
 
         self.startTimer(100/6)
+
     def timerEvent(self, event):
         self.update()
         
@@ -244,7 +246,8 @@ class Window(QOpenGLWidget):
 
     # def reshape(self,x,y, w, h):
     #     self._set_xywh( x, y, w, h)
-    
+        
+
     def set_world(self, world):
         self.world = world
     
@@ -267,7 +270,7 @@ class Window(QOpenGLWidget):
     #     self.height = _set_attribute(height, cond_function )
     #     self.x = _set_attribute(x, cond_function )
     #     self.y = _set_attribute(y, cond_function )
-
+    # @utils.print_time
     def draw(self):
         # glViewport(self.x, self.y, self.width, self.height)
         # self.camera(self.factor_width, self.factor_height)
@@ -275,10 +278,24 @@ class Window(QOpenGLWidget):
         self.camera(1,1)
         self.world.world_draw()
     
+    def initialize_vertex_array(self):
+        
+        self.vbo = glvbo.VBO(np.array([1,2,3]))
+        self.vbo.bind()
 
+        glEnableClientState(GL_VERTEX_ARRAY)
+        glEnableClientState(GL_COLOR_ARRAY)
+
+        buffer_offset = ctypes.c_void_p
+        # stride = (3+3)*self.vertices.itemsize
+        stride = (3+3)*4
+        glVertexPointer(3, GL_FLOAT, stride, None)
+        glColorPointer(3, GL_FLOAT, stride, buffer_offset(12))
+        glBindVertexArray(0)
 
     def initializeGL(self):
         print("init")
+
         glClearColor(0,0,0,0)
         glClearDepth(1.0)
         glEnable(GL_DEPTH_TEST)
@@ -291,14 +308,14 @@ class Window(QOpenGLWidget):
 
 
     
-
     def paintGL(self):
+        print("paint")
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         
         self.draw()
         glFlush()
         
-
     def resizeGL(self, width, height):
         # glViewport(0,0,width,height)
         # array = (GLfloat *16)()
