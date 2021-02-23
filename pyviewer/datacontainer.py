@@ -145,8 +145,8 @@ import  OpenGL.arrays.vbo as glvbo # For GL VAO VBO
 import sys
 class Renderer2():
     def __init__(self, V, F):
-        self.vertex = V.astype('float64').ravel()
-        self.face = F.astype('int32').ravel()
+        self.vertex = V.astype('float64')
+        self.face = F.astype('int32')
         # self.vertex_and_normal = self.calc_normal()
         
         # self.vertex_and_normal = np.concatenate([self.vertex, self.vertex_and_normal], axis = -1)
@@ -167,7 +167,7 @@ class Renderer2():
         return normal_vector/np.linalg.norm(normal_vector)
 
 
-    def calc_normal(self):
+    def calc_face_normal(self):
         f_norms = []
         for indice in self.face : 
             f_norm = self.calc_normal_each_v(*indice)
@@ -224,28 +224,44 @@ class Renderer2():
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
         
 
-        all_point = self.vertex[self.face].astype(np.float32).flatten()
-        print(all_point)
+        all_point = self.vertex[self.face.ravel()].astype(np.float32).flatten()
+        self.all_point = all_point
         glBufferData(GL_ARRAY_BUFFER, all_point.nbytes, all_point, GL_DYNAMIC_DRAW)
         
         
         
+
+
         # self.ibo = GLuint(0)
         # glGenBuffers(1, self.ibo)
         # glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ibo)
         # print("test", self.face.nbytes)
         # glBufferData(GL_ELEMENT_ARRAY_BUFFER, self.face.nbytes, self.face, GL_STATIC_DRAW)
+        glEnableVertexAttribArray(self.vao)
+        
+        self.nbo = GLuint(0)
+        glGenBuffers(1, self.nbo)
+        glBindBuffer(GL_ARRAY_BUFFER, self.nbo)
+        face_norms = self.calc_face_normal()
+        glBufferData(GL_ARRAY_BUFFER, face_norms.nbytes, face_norms.flatten(), GL_DYNAMIC_DRAW)
         
 
 
 
         
-        # glEnableVertexAttribArray(self.vao)
         
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, False, 0, None)
+        glVertexAttribPointer(0, 3, GL_FLOAT, False, 4*3, None)
         glEnableVertexAttribArray(0)
+
+        glBindBuffer(GL_ARRAY_BUFFER, self.nbo)
+        glNormalPointer(GL_FLOAT, 4*3, None)
+        glVertexAttribPointer(1, 3, GL_FLOAT, True, 4*3, None)
+        glEnableVertexAttribArray(1) 
+
+        
+        # glEnableVertexAttribArray(0)
         
 
         
@@ -254,6 +270,7 @@ class Renderer2():
 
 
         
+        glEnableVertexAttribArray(0)
         
         # self.vertex_buffer_object_v_idx.bind()
         # glVertexPointer(3, GL_FLOA`T, 0, None )
@@ -284,13 +301,16 @@ class Renderer2():
         # glDrawArrays(GL_LINES, 0, len(self.face)//3)
         # array = (GLfloat *16)()
         # glEnableClientState(GL_VERTEX_ARRAY)
-        glBindVertexArray(self.vao)
-        
-        glDrawArrays(GL_TRIANGLES, 0, len(self.face)//3)
+        glEnableClientState(GL_VERTEX_ARRAY)
+        glEnableClientState(GL_NORMAL_ARRAY)
+        glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+        # glBindVertexArray(self.vao)
+        glVertexPointer(3, GL_FLOAT, 0, self.vbo)
+        glDrawArrays(GL_TRIANGLES, 0, len(self.all_point))
 
         # glDrawElements(GL_TRIANGLES, len(self.vertex), GL_UNSIGNED_INT, None)
         # glDrawElementsui(GL_TRIANGLES, self.face)
-        glBindVertexArray(0)
+        # glBindVertexArray(0)
 
 
         

@@ -469,12 +469,12 @@ class Projection():
         self.bottom = -1 
         self.left = -1 
         self.right = 1
-        self.near = -10
-        self.far  = 10
-        self.top = 10
-        self.bottom = -10
-        self.left = -10
-        self.right = 10
+        # self.near = -10
+        # self.far  = 10
+        # self.top = 10
+        # self.bottom = -10
+        # self.left = -10
+        # self.right = 10
 
     def set_mode(self, mode = "ortho"):
         if Projection.ORTHGONAL_MODE == mode :
