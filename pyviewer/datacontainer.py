@@ -94,11 +94,14 @@ class RendererContainer():
         
 
 
-        if self.draw_mesh_opt:
-            # material()
-            glColor3f(1.0, 1.0, 1.0)
-            _draw(GL_TRIANGLES)
+        # if self.draw_mesh_opt:
+        #     # material()
+        #     glColor3f(1.0, 1.0, 1.0)
+        #     _draw(GL_TRIANGLES)
         
+
+        _draw(GL_POINTS)
+
         # if self.draw_line_opt : 
         #     # material()
         #     glLineWidth(20)
@@ -199,35 +202,73 @@ class Renderer2():
 
         # self.vertex_buffer_object_f_idx = glvbo.VBO(self.face)
         # self.vertex_buffer_object_f_idx.bind()
-        self.vertex_buffer_object_v_idx =  glvbo.VBO(self.vertex)
-        self.vertex_buffer_object_v_idx.bind()
+        # self.vertex =np.array([ -.5, -0.5, 0.0,  .5, -.5, 0.0 , 0.0, .5, 0.0])
         
+        # self.vao= GLuint(0)
+        # glGenVertexArrays(1, self.vao)
+        # glBindVertexArray(self.vao)
 
+        # self.vertex_buffer_object_v_idx =  glvbo.VBO(self.vertex, usage="GL_DYNAMIC_DRAW", target="GL_ARRAY_BUFFER")
+        # self.vertex_buffer_object_v_idx.bind()
+        
+        # self.vertex_buffer_object_f_idx =  glvbo.VBO(self.face, usage="GL_STATIC_DRAW", target="GL_ELEMENT_ARRAY_BUFFER")
+        # self.vertex_buffer_object_f_idx.bind()
 
-        self.vao= GLuint(0)
+        self.vao = GLuint(0)
         glGenVertexArrays(1, self.vao)
         glBindVertexArray(self.vao)
 
-        glEnableClientState(GL_VERTEX_ARRAY)
+
+        self.vbo = GLuint(0)
+        glGenBuffers(1, self.vbo)
+        glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+        
+
+        all_point = self.vertex[self.face].astype(np.float32).flatten()
+        print(all_point)
+        glBufferData(GL_ARRAY_BUFFER, all_point.nbytes, all_point, GL_DYNAMIC_DRAW)
+        
+        
+        
+        # self.ibo = GLuint(0)
+        # glGenBuffers(1, self.ibo)
+        # glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ibo)
+        # print("test", self.face.nbytes)
+        # glBufferData(GL_ELEMENT_ARRAY_BUFFER, self.face.nbytes, self.face, GL_STATIC_DRAW)
+        
 
 
-        buffer_offset = ctypes.c_void_p
-        # stride = (3+3)*self.vertex.itemsize
-        stride = (3)*self.vertex.itemsize
 
-        # glVertexPointer(3, GL_FLOAT, stride, None )
-        # glVertexPointer(3, GL_FLOAT, 0, None )
-        glVertexPointer(3, GL_FLOAT, 0, None )
-        # glNormalPointer(3, GL_FLOAT, stride, buffer_offset(12))
+        
+        # glEnableVertexAttribArray(self.vao)
+        
+        glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
 
-        glBindVertexArray(0)
+        glVertexAttribPointer(0, 3, GL_FLOAT, False, 0, None)
+        glEnableVertexAttribArray(0)
+        
+
+        
+
+
+
+
+        
+        
+        # self.vertex_buffer_object_v_idx.bind()
+        # glVertexPointer(3, GL_FLOA`T, 0, None )
+
+        # glEnableClientState(GL_VERTEX_ARRAY)
+        
+        
+        # glBindVertexArray(0)
     def __del__(self):
         if hasattr(self, 'vbo'):
             glDeleteBuffers(1, self.vbo)
 
     def change_vertex_data(self, v, idx):
         pass
-
+    # @utils.print_time
     def draw(self, *args, **kwargs):
         # glBindVertexArray(self.vao)
         # glDrawElements(GL_TRIANGLES, len(self.face), GL_UNSIGNED_INT, self.face)
@@ -238,10 +279,19 @@ class Renderer2():
         # print(len(self.face)//3, "counts")
         # glDrawElements(GL_TRIANGLES, len(self.face)//3, GL_UNSIGNED_INT, None)
 
+        # glBindVertexArray(self.vao)
+        # glDrawArrays(GL_TRIANGLES, 0, len(self.face)//3)
+        # glDrawArrays(GL_LINES, 0, len(self.face)//3)
+        # array = (GLfloat *16)()
+        # glEnableClientState(GL_VERTEX_ARRAY)
         glBindVertexArray(self.vao)
+        
         glDrawArrays(GL_TRIANGLES, 0, len(self.face)//3)
+
+        # glDrawElements(GL_TRIANGLES, len(self.vertex), GL_UNSIGNED_INT, None)
+        # glDrawElementsui(GL_TRIANGLES, self.face)
         glBindVertexArray(0)
-        # glDisableClientState(GL_VERTEX_ARRAY)
+
 
         
 
@@ -266,7 +316,7 @@ class DataContainer():
         self.selected_v_idx = []
         self.is_initialized = False
         self.aabb = AABB.AABBTree()
-        self.renderer = RendererContainer(True, True, False)
+        # self.renderer = RendererContainer(True, True, False)
         self.compile_flag = False
         self.renderer = Renderer2(self.V, self.F)
         # self.renderer.compile()
@@ -328,15 +378,22 @@ class DataContainer():
         glRotatef(self.rot_z, 0, 0, 1)
         glRotatef(self.rot_y, 0, 1, 0)
         glRotatef(self.rot_x, 1, 0, 0)
-
-
-
-        self.renderer.draw(self.V, self.F, self.material, self.selected_v_idx)
         array = (GLfloat *16)()
-        
         glGetFloat(GL_MODELVIEW_MATRIX, array)
-        self.mat = np.array(array).reshape(4,4).T        
+        self.mat = np.array(array).reshape(4,4).T     
         glPopMatrix()
+        
+        glPushMatrix()
+        glRotatef(self.rot_z, 0, 0, 1)
+        glRotatef(self.rot_y, 0, 1, 0)
+        glRotatef(self.rot_x, 1, 0, 0)
+        array = (GLfloat *16)()
+        self.renderer.draw(self.V, self.F, self.material, self.selected_v_idx)
+        glPopMatrix()
+
+
+
+        # print(self.mat)   
        
 
 

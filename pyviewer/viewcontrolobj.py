@@ -278,20 +278,20 @@ class Window(QOpenGLWidget):
         self.camera(1,1)
         self.world.world_draw()
     
-    def initialize_vertex_array(self):
+    # def initialize_vertex_array(self):
         
-        self.vbo = glvbo.VBO(np.array([1,2,3]))
-        self.vbo.bind()
+    #     self.vbo = glvbo.VBO(np.array([1,2,3]))
+    #     self.vbo.bind()
 
-        glEnableClientState(GL_VERTEX_ARRAY)
-        glEnableClientState(GL_COLOR_ARRAY)
+    #     glEnableClientState(GL_VERTEX_ARRAY)
+    #     glEnableClientState(GL_COLOR_ARRAY)
 
-        buffer_offset = ctypes.c_void_p
-        # stride = (3+3)*self.vertices.itemsize
-        stride = (3+3)*4
-        glVertexPointer(3, GL_FLOAT, stride, None)
-        glColorPointer(3, GL_FLOAT, stride, buffer_offset(12))
-        glBindVertexArray(0)
+    #     buffer_offset = ctypes.c_void_p
+    #     # stride = (3+3)*self.vertices.itemsize
+    #     stride = (3+3)*4
+    #     glVertexPointer(3, GL_FLOAT, stride, None)
+    #     glColorPointer(3, GL_FLOAT, stride, buffer_offset(12))
+    #     glBindVertexArray(0)
 
     def initializeGL(self):
         print("init")
@@ -323,6 +323,7 @@ class Window(QOpenGLWidget):
         # mview = np.array(array).reshape(4,4).T
         # print("eye to world : \n", mview)
         print("resize" , width, height)
+        glViewport(0,0,width,height)
         self.proj.set_mode('ortho').set_aspect_ratio(width, height).set_angle(45.0).compile()
         self.proj()
         
@@ -468,6 +469,12 @@ class Projection():
         self.bottom = -1 
         self.left = -1 
         self.right = 1
+        self.near = -10
+        self.far  = 10
+        self.top = 10
+        self.bottom = -10
+        self.left = -10
+        self.right = 10
 
     def set_mode(self, mode = "ortho"):
         if Projection.ORTHGONAL_MODE == mode :
@@ -520,6 +527,7 @@ class Projection():
     def __call__(self):
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
+        
         self.view()
 
     
@@ -591,6 +599,8 @@ class Camera():
         # print("cam\n", self.mat)
 
         # return self.cam_pos, self.cam_direct, cam_normal_direction
+        # print(self.mat)
+
 
 
 
