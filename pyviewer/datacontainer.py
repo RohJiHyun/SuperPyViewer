@@ -14,6 +14,7 @@ class WorldContainer():
     def __init__(self):
         self.reference_num = 0
         self.light = []
+        self.default_light = vco.Light()
         self.data_container_list = []
         self.t= False
 
@@ -28,6 +29,8 @@ class WorldContainer():
         self.light.append(light)
 
     def light_initialize(self):
+        if self.light == [] :
+            self.default_light.initialize()
         for l in self.light:
             l.initialize()
     
@@ -84,7 +87,7 @@ class RendererContainer():
                 glBegin(enum)
 
 
-                # calc_face_normal(*v_indice)
+                calc_face_normal(*v_indice)
 
                 for v_idx in v_indice:
 
@@ -144,20 +147,29 @@ import ctypes
 import  OpenGL.arrays.vbo as glvbo # For GL VAO VBO
 import sys
 class Renderer2():
-    def __init__(self, V, F):
-        self.vertex = V.astype('float64')
+    def __init__(self, V, F, material):
+        self.vertex = V.astype('float32')
         self.face = F.astype('int32')
+        self.idx_mapper = self.mapping_index_to_face()
         # self.vertex_and_normal = self.calc_normal()
         
+        self.material = material
         # self.vertex_and_normal = np.concatenate([self.vertex, self.vertex_and_normal], axis = -1)
 
         
 
-
-
-
         pass
         # glBindBuffer()
+    
+    def mapping_index_to_face(self):
+        reval = [[] for _ in range(len(self.vertex))]
+        for v_idx in range(len(self.vertex)):
+            for f_idx, f_v_indice in enumerate(self.face):
+                for f_v_idx in f_v_indice:
+                    if f_v_idx == v_idx :
+                       reval[v_idx].append(f_idx)
+        return reval
+        
 
     def calc_normal_each_v(self, v_idx1, v_idx2, v_idx3):
         
@@ -175,142 +187,123 @@ class Renderer2():
         
         return np.array(f_norms)
         
+    def calc_vertex_normal(self):
+        v_norms = []
+        for v_idx in range(len(self.vertex)):
+            v_norm = 0
+            times = 0
+            for f_idx in self.idx_mapper[v_idx]:
+                v_norm += self.f_norms[f_idx]
+                times += 1
+            v_norm=v_norm/( times if times > 0 else 1)
+            v_norms.append(v_norm / np.linalg.norm(v_norm))
+        return np.array(v_norms)
+
 
     def compile(self):
-        print(self.vertex)
-        # self.vbo= GLuint(0)
-        # glGenBuffers(1, self.vbo)
-        # glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
-        # print("hey wow", self.vertex.nbytes)
-        
-        # glBufferData(GL_ARRAY_BUFFER, self.vertex.nbytes, self.vertex, GL_STREAM_DRAW)
-        # glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
-        
-        # self.ebo= GLuint(0)
-        # glGenBuffers(1, self.ebo)
-        # glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ebo)
-        # print("hey wow", self.face.nbytes)
-        # print("hey wow", self.face)
-        # glBufferData(GL_ELEMENT_ARRAY_BUFFER, self.face.nbytes, self.face, GL_STATIC_DRAW)
-        # glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ebo)
 
-
-
-        # glEnableClientState(GL_VERTEX_ARRAY)
-        # glVertexPointer(3, GL_FLOAT, 0, None)
-        # glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
-
-        # self.vertex_buffer_object_f_idx = glvbo.VBO(self.face)
-        # self.vertex_buffer_object_f_idx.bind()
-        # self.vertex =np.array([ -.5, -0.5, 0.0,  .5, -.5, 0.0 , 0.0, .5, 0.0])
-        
-        # self.vao= GLuint(0)
+        self.f_norms = self.calc_face_normal()
+        self.v_norms = self.calc_vertex_normal()
+        print("norms")
+        print(self.f_norms)
+        print(self.v_norms)
+        # add Vertex array object 
+        # self.vao = GLuint(0)
         # glGenVertexArrays(1, self.vao)
         # glBindVertexArray(self.vao)
 
-        # self.vertex_buffer_object_v_idx =  glvbo.VBO(self.vertex, usage="GL_DYNAMIC_DRAW", target="GL_ARRAY_BUFFER")
-        # self.vertex_buffer_object_v_idx.bind()
-        
-        # self.vertex_buffer_object_f_idx =  glvbo.VBO(self.face, usage="GL_STATIC_DRAW", target="GL_ELEMENT_ARRAY_BUFFER")
-        # self.vertex_buffer_object_f_idx.bind()
-
-        self.vao = GLuint(0)
-        glGenVertexArrays(1, self.vao)
-        glBindVertexArray(self.vao)
 
 
+
+        # add vertex buffer for storing vertex and normal
         self.vbo = GLuint(0)
         glGenBuffers(1, self.vbo)
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
-        
 
+        # TODO THIS is Dummy code. will be removed after all.
         all_point = self.vertex[self.face.ravel()].astype(np.float32).flatten()
         self.all_point = all_point
-        glBufferData(GL_ARRAY_BUFFER, all_point.nbytes, all_point, GL_DYNAMIC_DRAW)
-        
-        
+        self.all_point = self.vertex.flatten()
         
 
 
-        # self.ibo = GLuint(0)
-        # glGenBuffers(1, self.ibo)
-        # glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ibo)
-        # print("test", self.face.nbytes)
-        # glBufferData(GL_ELEMENT_ARRAY_BUFFER, self.face.nbytes, self.face, GL_STATIC_DRAW)
-        glEnableVertexAttribArray(self.vao)
-        
-        self.nbo = GLuint(0)
-        glGenBuffers(1, self.nbo)
-        glBindBuffer(GL_ARRAY_BUFFER, self.nbo)
-        face_norms = self.calc_face_normal()
-        glBufferData(GL_ARRAY_BUFFER, face_norms.nbytes, face_norms.flatten(), GL_DYNAMIC_DRAW)
-        
-
-
-
-        
-        
+        # [x1 y1 z1 nx1 ny1 nz1]
+        # [x2 y2 z2 nx2 ny2 nz2]
+        # . ...
+        # . ...
+        self.vertice_and_normal = np.concatenate([self.vertex, self.v_norms], axis=-1)
+        # self.vertice_and_normal = self.vertex
+        print("vnorm",self.vertice_and_normal)
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
-
-        glVertexAttribPointer(0, 3, GL_FLOAT, False, 4*3, None)
-        glEnableVertexAttribArray(0)
-
-        glBindBuffer(GL_ARRAY_BUFFER, self.nbo)
-        glNormalPointer(GL_FLOAT, 4*3, None)
-        glVertexAttribPointer(1, 3, GL_FLOAT, True, 4*3, None)
-        glEnableVertexAttribArray(1) 
-
+        glBufferData(GL_ARRAY_BUFFER, self.vertice_and_normal.nbytes, self.vertice_and_normal.flatten(), GL_DYNAMIC_DRAW)
         
-        # glEnableVertexAttribArray(0)
         
-
+        
+        
         
 
 
+        self.ibo = GLuint(0)
+        glGenBuffers(1, self.ibo)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ibo)
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, self.face.nbytes, self.face.flatten(), GL_STATIC_DRAW)
+
+
+        # Unbind until starting drawing.
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
 
 
         
-        glEnableVertexAttribArray(0)
-        
-        # self.vertex_buffer_object_v_idx.bind()
-        # glVertexPointer(3, GL_FLOA`T, 0, None )
 
-        # glEnableClientState(GL_VERTEX_ARRAY)
-        
-        
-        # glBindVertexArray(0)
     def __del__(self):
         if hasattr(self, 'vbo'):
             glDeleteBuffers(1, self.vbo)
 
     def change_vertex_data(self, v, idx):
-        pass
+        print(v)
+        v = v.astype(np.float32)
+        self.vertex[idx] = v
+
+        
+        glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+        print(v.astype(np.float32).flatten().nbytes)
+        # glBufferSubData(GL_ARRAY_BUFFER, 4*(3+3) * idx, 4*3,v.flatten()) # edit vertex
+        glBufferSubData(GL_ARRAY_BUFFER, idx * 4 *(3+3), v.flatten().nbytes,v.flatten()) # edit vertex
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+
     # @utils.print_time
     def draw(self, *args, **kwargs):
-        # glBindVertexArray(self.vao)
-        # glDrawElements(GL_TRIANGLES, len(self.face), GL_UNSIGNED_INT, self.face)
-        # glBindVertexArray(0)
-        # glEnableClientState(GL_VERTEX_ARRAY)
-        # glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
-        # glDrawArrays(GL_TRIANGLES, 0, len(self.vertex))
-        # print(len(self.face)//3, "counts")
-        # glDrawElements(GL_TRIANGLES, len(self.face)//3, GL_UNSIGNED_INT, None)
 
+
+        self.material()
+        # glEnable(GL_LIGHTING)
+        # glDisable(GL_COLOR_MATERIAL)        
+
+        # glColor(0,1,1)
         # glBindVertexArray(self.vao)
-        # glDrawArrays(GL_TRIANGLES, 0, len(self.face)//3)
-        # glDrawArrays(GL_LINES, 0, len(self.face)//3)
-        # array = (GLfloat *16)()
-        # glEnableClientState(GL_VERTEX_ARRAY)
         glEnableClientState(GL_VERTEX_ARRAY)
         glEnableClientState(GL_NORMAL_ARRAY)
+        # glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+        # glVertexPointer(3, GL_FLOAT, 0, self.vbo)
+        # glDrawArrays(GL_TRIANGLES, 0, len(self.all_point))
+        
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
-        # glBindVertexArray(self.vao)
-        glVertexPointer(3, GL_FLOAT, 0, self.vbo)
-        glDrawArrays(GL_TRIANGLES, 0, len(self.all_point))
-
-        # glDrawElements(GL_TRIANGLES, len(self.vertex), GL_UNSIGNED_INT, None)
-        # glDrawElementsui(GL_TRIANGLES, self.face)
+        normal_offset = ctypes.c_void_p(3*4) # Normal_offset
+        stride = 4*(3 + 3) # GL_FLOAT * (xyz_size + xyz_size)
+        
+        glVertexPointer(3, GL_FLOAT, stride, None )
+        glNormalPointer(GL_FLOAT, stride, normal_offset)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ibo)
+        # print(len(self.face.flatten()))
+        
+        glDrawElements(GL_TRIANGLES, len(self.face.flatten()), GL_UNSIGNED_INT, None)
+        # glDrawElements(GL_TRIANGLES, 72, GL_UNSIGNED_INT, None)
+        glDisableClientState(GL_VERTEX_ARRAY)
+        glDisableClientState(GL_NORMAL_ARRAY)
         # glBindVertexArray(0)
+        
+
 
 
         
@@ -338,7 +331,7 @@ class DataContainer():
         self.aabb = AABB.AABBTree()
         # self.renderer = RendererContainer(True, True, False)
         self.compile_flag = False
-        self.renderer = Renderer2(self.V, self.F)
+        self.renderer = Renderer2(self.V, self.F, self.material)
         # self.renderer.compile()
         self.aabb.insert_entity(self.V, self.F)
         
@@ -356,6 +349,8 @@ class DataContainer():
         idx = self.selected_v_idx[0]
         new_v = picker.Picker.point_edit(ray, self.mat, self.V[ idx ] )
         self.V[idx] = new_v
+        print(new_v)
+        self.renderer.change_vertex_data(new_v,idx)
 
     def update_data(self, updated_data):
         self.data = updated_data

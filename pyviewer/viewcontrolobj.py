@@ -14,9 +14,9 @@ from pyviewer import AABB
 class Light():
     def __init__(self):
         self.position = [0.0, 0.0, 1.0, 0.0]
-        self.direcion = [0., 0., -1.]
+        self.direcion = [0., 1., 0.]
         self.set_ambient([1.0, 1.0, 1.0, 0.0])
-        self.set_ambient([0.0, 0.0, 0.0, 0.0])
+        # self.set_ambient([0.0, 0.0, 0.0, 0.0])
         self.set_diffuse([1.0, 1.0, 1.0, 0.0])
         self.set_specular([1.0, 1.0, 1.0, 0.0])
 
@@ -66,11 +66,11 @@ class Light():
 
 class Material():
     def __init__(self):
-        # self.set_ambient([0.2, 0.2 , 0.2 , 0.0])
-        self.set_ambient([1., 1. , 1. , 0.0])
-        self.set_diffuse([1. , 1, 1., 0.0])
-        self.set_specular([0.2, 0.2, 0.2, 0.0])
-        self.set_emission([1.0, 0.0, 1.0, 0.0])
+        self.set_ambient([0.4,0.4,0.4 , 0.0])
+        # self.set_ambient([1., 1. , 1. , 0.0])
+        self.set_diffuse([0. , 0, 0., 0.0])
+        self.set_specular([0.3, 0.3, 0.3, 0.0])
+        self.set_emission([0.0, 0.0, 0.0, 0.0])
         self.set_shininess([1.0])
 
     def set_ambient(self, ambient):
@@ -100,9 +100,9 @@ class Material():
         # see also https://www.khronos.org/opengl/wiki/File:Opengl_lighting_flowchart.png
         
 
-        # glDisable(GL_COLOR_MATERIAL)        
+        glDisable(GL_COLOR_MATERIAL)        
         # glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, self.ambient + self.diffuse)
-        glEnable(GL_COLOR_MATERIAL)
+        # glEnable(GL_COLOR_MATERIAL)
         glMaterialfv(GL_FRONT, GL_AMBIENT, self.ambient)
         glMaterialfv(GL_FRONT, GL_DIFFUSE, self.diffuse)
         glMaterialfv(GL_FRONT, GL_SPECULAR, self.specular)

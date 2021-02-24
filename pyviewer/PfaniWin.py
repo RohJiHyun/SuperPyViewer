@@ -429,7 +429,7 @@ class MotionViewer(Fl_Window):
         self.viewSlider.value(-1)
         self.viewSlider.step(1)
         self.viewSlider.callback(self.callBack)
-
+        
         self.end()
         Fl.add_timeout(0.0, self.timer)
         
