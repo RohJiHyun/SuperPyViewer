@@ -349,7 +349,7 @@ class DataContainer():
         idx = self.selected_v_idx[0]
         new_v = picker.Picker.point_edit(ray, self.mat, self.V[ idx ] )
         self.V[idx] = new_v
-        print(new_v)
+        print("as" , new_v, "as2", new_v.astype(np.float32))
         self.renderer.change_vertex_data(new_v,idx)
 
     def update_data(self, updated_data):

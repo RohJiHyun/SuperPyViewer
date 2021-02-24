@@ -172,14 +172,20 @@ class Picker():
     
     # TMP TODO
         from_point, to_vector = Picker._toNormailzeCoord(x,y, res_w, res_h)
+        print("before inv PROJ from to (NDC) : ", from_point, to_vector)
         from_point = Picker._toEyeCoord(from_point, proj_mat)
+        print("before inv modelview from to(PROJ) : ", from_point, to_vector)
         from_point = Picker._toModel(from_point, mv_mat)
+        print("before inv PROJ from to (NDC) :  ", from_point, to_vector)
         to_vector = Picker._toEyeCoord(to_vector, proj_mat)
+        print("before inv modelview from to(PROJ) ", from_point, to_vector)
         to_vector = Picker._toModel(to_vector, mv_mat)
+        print("after from to : ", from_point, to_vector)
         
         ray = AABB.Ray()
         ray.set_direction(to_vector[:3])
         ray.set_pos(from_point[:3])
+        print("ray is : ", ray)
         
         return ray
 
@@ -225,6 +231,7 @@ class Picker():
         # # print("proj to eye : \n", proj)
         inv_proj = np.linalg.inv(proj_mat)
 # >>>>>>> Stashed changes
+        print("PROJ inv \n", inv_proj)
         reval = inv_proj.dot(coord)
         return reval
 

@@ -300,7 +300,7 @@ class Window(QOpenGLWidget):
         glClearDepth(1.0)
         glEnable(GL_DEPTH_TEST)
         glShadeModel(GL_SMOOTH)
-        # self.resizeGL(self.size().width(), self.size().height())
+        self.resizeGL(self.size().width(), self.size().height())
 
         self.world.light_initialize()
 
@@ -463,8 +463,8 @@ class Projection():
         self.aspect = self.width / self.height
         self.angle = 45.0
 
-        self.near = -2
-        self.far  = 2
+        self.near = 2
+        self.far  = -2
         self.top = 1
         self.bottom = -1 
         self.left = -1 
@@ -491,9 +491,12 @@ class Projection():
         if self.width == -1 or self.height == -1 :
             self.width = width
             self.height = height
-        self.width_factor = width / self.width
-        self.height_factor = height / self.height
+        self.width_factor = width / self.width * self.height
+        self.height_factor = height / self.height * self.width
         self.aspect = width/height
+        # self.aspect = 1
+        print("width : {}, height : {}, aspect : {}".format( height, width, self.aspect))
+        print("actual width : +/-{}, actual height :+/-{} ".format(self.right * self.aspect, self.top/self.aspect))
 
         
 
@@ -509,16 +512,25 @@ class Projection():
     def _wrap_proj(self):
         def wrap_func():
             if self.mode == Projection.ORTHGONAL_MODE : 
-                glOrtho(self.left *  self.aspect, self.right * self.aspect,\
-                        self.bottom , self.top,\
-                        self.near, self.far)
+                if self.aspect > 1:
+                    glOrtho(self.left *  self.aspect, self.right * self.aspect,\
+                            self.bottom , self.top,\
+                            self.near, self.far)
+                # glOrtho(self.left *self.width_factor, self.right *self.width_factor,\
+                #         self.bottom *self.height_factor , self.top *self.height_factor,\
+                #         self.near, self.far)
+                else : 
+                    glOrtho(self.left , self.right ,\
+                            self.bottom / self.aspect, self.top / self.aspect,\
+                            self.near, self.far)
 
             elif self.mode == Projection.PERSPECTIVE_MODE:
                 gluPerspective(45.0, self.aspect, 1., 100.)
             
             array = (GLfloat *16)()
-            glGetFloat(GL_MODELVIEW_MATRIX, array)
+            glGetFloat(GL_PROJECTION_MATRIX, array)
             self.mat = np.array(array).reshape(4,4).T
+            print(self.mat)
 
         return wrap_func
 
@@ -595,6 +607,7 @@ class Camera():
         
         glGetFloat(GL_MODELVIEW_MATRIX, array)
         self.mat = np.array(array).reshape(4,4).T
+
         # print(self.mat, "whatis mat")
         # print("cam\n", self.mat)
 
