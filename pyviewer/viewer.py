@@ -1,6 +1,5 @@
 
-import sys, pygame 
-# from pygame.locals import * # Local Key Value and Mod Constant initialize
+import sys 
 import numpy as np 
 import logging 
 import igl
@@ -23,11 +22,13 @@ from pyviewer import datacontainer as dc
 
 
 
-import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from pyviewer import ui
 from pyviewer import viewcontrolobj as vco 
+
+
+from pyviewer import controller, data_model
 
 
 
@@ -57,15 +58,7 @@ class CustomViewer(QMainWindow):
             self.addDockWidget(allowed_area, dock)
             
         elif  central:
-            # dock = QDockWidget(name, self)
-            # dock.setFloating(False)
-            # self.windows.append(dock)
-            # dock.setAllowedAreas(allowed_area)
-            # dock.setWidget(window)
-            print("chels")
 
-            # self.addDockWidget(Qt.RightDockWidgetArea, dock)
-            # self.addDockWidget(allowed_area, dock)
             self.setCentralWidget(window)
             
             

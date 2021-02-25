@@ -46,6 +46,7 @@ class Light():
     def initialize(self):
         glClearColor(0.,0.,0.,0.)
         glClearDepth(1.0)
+        glShadeModel(GL_FLAT)
         glShadeModel(GL_SMOOTH)
         glEnable(GL_CULL_FACE)
         glFrontFace(GL_CCW)
@@ -237,7 +238,7 @@ class Window(QOpenGLWidget):
         self.is_background_clicked = False #(It is bocome True if Point clicked)
         self.prev_mouse_pos = [0., 0.]
 
-        self.startTimer(100/6)
+        self.startTimer(10/6)
 
     def timerEvent(self, event):
         self.update()
@@ -303,7 +304,8 @@ class Window(QOpenGLWidget):
         self.resizeGL(self.size().width(), self.size().height())
 
         self.world.light_initialize()
-
+        self.prev_mouse_pos[0] = -1
+        self.prev_mouse_pos[1] = -1
 
 
 
@@ -327,13 +329,25 @@ class Window(QOpenGLWidget):
         self.proj.set_mode('ortho').set_aspect_ratio(width, height).set_angle(45.0).compile()
         self.proj()
         
-
+    def wheelEvent(self, e):
+        y = e.angleDelta().y()
+        if y > 0:
+            
+            self.proj.add_zoom(0.1)
+        elif y < 0:
+            
+            self.proj.add_zoom(-0.1)
+        self.proj.compile()
+        print(self.proj)
+        self.proj()
+        
 
     def mouseMoveEvent(self, pos):
         # picker.Picker.getxy(pos.x(), pos.y())
         # pass
         limit_size = 100
         delta_rot_per_ratio = np.pi/2
+        maximum_rotation = 90
         def convert_delta_pos_to_rot(delta_x, delta_y):
             """
                 if delta size is full width, then it convert to 3 time rotation.
@@ -347,6 +361,10 @@ class Window(QOpenGLWidget):
         if self.is_mouse_pressed and self.is_background_clicked : 
             x = pos.x()
             y = pos.y()
+            if self.prev_mouse_pos[0] == -1 and self.prev_mouse_pos[1] == -1:
+                self.prev_mouse_pos[0] = x
+                self.prev_mouse_pos[1] = y
+
             delta_x = x  - self.prev_mouse_pos[0]
             delta_y =  y - self.prev_mouse_pos[1]
             if abs(delta_x) > limit_size :
@@ -364,8 +382,15 @@ class Window(QOpenGLWidget):
                 delta_y = 1
                 y_rot = 0
             
-            
-            self.world.data_container_list[0].rotation_update((delta_x / abs(delta_x)) * x_rot, (delta_y / abs(delta_y)) * y_rot, 0 )
+            delta_x_ratio = delta_x / self.size().width() 
+            delta_y_ratio = delta_y / self.size().height()
+
+            x_rot = delta_x_ratio * maximum_rotation 
+            y_rot = delta_y_ratio * maximum_rotation
+
+            # self.world.data_container_list[0].rotation_update((delta_x / abs(delta_x)) * x_rot, (delta_y / abs(delta_y)) * y_rot, 0 )
+            print("y_rot{}, x_rot{}".format(x_rot, y_rot))
+            self.world.data_container_list[0].rotation_update(  y_rot,  x_rot, 0 )
 
         elif self.is_mouse_pressed and not self.is_background_clicked:
             self.world.data_container_list[0].picked_v_update(picker.Picker.get_ray(pos.x(), pos.y(), self.size().width(), self.size().height(), self.proj.mat, self.camera.mat))
@@ -412,27 +437,12 @@ class Window(QOpenGLWidget):
         print("closest v idx", closest_v_idx)
         print(self.world.data_container_list[0].V[closest_v_idx])
         self.world.data_container_list[0].selected_v_idx.append(closest_v_idx)
-# >>>>>>> Stashed changes
-
-        # lengths = sorted(lengths, key=operator.itemgetter(0))
-        # print(lengths)
-
-        # self.world.data_container_list[0].selected_v_idx.append(lengths[0][1])
-
-
-            
-        # int v_idx = i;
-        # vector3 v = vertices[v_idx];
-        # cml::vector3d a, b; unProject(mouseX, mouseY, a, b);
-        # double len = pointToLineDistance3D(a,b, cml::vector3d(v[0],v[1],v[2]));
-        # IntFourMulitples four(j_idx,c_idx,f_idx,v_idx);
-        # distances.push_back(make_pair(four, len));
 
     def mouseReleaseEvent(self, pos):
         self.is_mouse_pressed = False 
         self.is_background_clicked = False
-        self.prev_mouse_pos[0] = 0
-        self.prev_mouse_pos[1] = 0
+        self.prev_mouse_pos[0] = -1
+        self.prev_mouse_pos[1] = -1
         
         self.world.data_container_list[0].selected_v_idx.clear()
 
@@ -463,18 +473,26 @@ class Projection():
         self.aspect = self.width / self.height
         self.angle = 45.0
 
-        self.near = 2
-        self.far  = -2
+        self.near = 100
+        self.far  = -100
         self.top = 1
         self.bottom = -1 
         self.left = -1 
         self.right = 1
-        # self.near = -10
-        # self.far  = 10
-        # self.top = 10
-        # self.bottom = -10
-        # self.left = -10
-        # self.right = 10
+
+        self.zoom = 0.0
+
+    def set_width(self, left, right):
+        self.right = right 
+        self.left =  left
+
+    def set_depth(self, near, far):
+        self.near = near
+        self.far = far
+
+    def set_height(self, top, bottom):
+        self.top = top
+        self.bottom = bottom
 
     def set_mode(self, mode = "ortho"):
         if Projection.ORTHGONAL_MODE == mode :
@@ -484,7 +502,17 @@ class Projection():
         else : 
             self.mode = Projection.ORTHGONAL_MODE
         return self
+    def add_zoom(self, ratio):
+        """
+             + Zoom in
+             - Zoom out
+        """
+
+        self.zoom += ratio
+        print(self.zoom)
+
     
+
     def set_aspect_ratio(self, width, height):
         
 
@@ -513,24 +541,27 @@ class Projection():
         def wrap_func():
             if self.mode == Projection.ORTHGONAL_MODE : 
                 if self.aspect > 1:
-                    glOrtho(self.left *  self.aspect, self.right * self.aspect,\
-                            self.bottom , self.top,\
+                    glOrtho((self.left - self.zoom)*  self.aspect , (self.right + self.zoom) * self.aspect ,\
+                            self.bottom , self.top ,\
                             self.near, self.far)
+                    print("work")
                 # glOrtho(self.left *self.width_factor, self.right *self.width_factor,\
                 #         self.bottom *self.height_factor , self.top *self.height_factor,\
                 #         self.near, self.far)
                 else : 
-                    glOrtho(self.left , self.right ,\
-                            self.bottom / self.aspect, self.top / self.aspect,\
+                    # glOrtho(self.left - self.zoom, self.right + self.zoom,\
+                    #         (self.bottom - self.zoom) / self.aspect  , (self.top + self.zoom) / self.aspect - self.zoom,\
+                    #         self.near, self.far)
+                    glOrtho(self.left /2, self.right/2,\
+                            self.bottom /2   , self.top /2,\
                             self.near, self.far)
-
+                    print("work 2")
             elif self.mode == Projection.PERSPECTIVE_MODE:
                 gluPerspective(45.0, self.aspect, 1., 100.)
             
             array = (GLfloat *16)()
             glGetFloat(GL_PROJECTION_MATRIX, array)
             self.mat = np.array(array).reshape(4,4).T
-            print(self.mat)
 
         return wrap_func
 
@@ -542,6 +573,10 @@ class Projection():
         
         self.view()
 
+
+    def __str__(self):
+        return "left {},  right {}, top {}, bottom {}, near {}, far{}".format(self.left, self.right, self.bottom, self.top, self.near, self.far)
+            
     
         
 
