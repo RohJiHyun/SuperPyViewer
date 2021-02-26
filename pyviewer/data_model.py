@@ -13,6 +13,4 @@ class BaseDataFlowModel():
 class GlboalDataFlowModel(BaseDataFlowModel):
     def __init__(self):
         super(self, BaseDataFlowModel)
-
-
-    
+        self.world = None 

@@ -178,4 +178,8 @@ class InspectorUI(BaseInspectorUI):
 
 
 
+    def add_custom_button(self, bttn_str = "ex"):
+
+        pass
+
 

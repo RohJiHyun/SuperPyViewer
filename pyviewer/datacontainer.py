@@ -22,6 +22,9 @@ class WorldContainer():
         self.reference_num += 1
         return self 
     
+
+    
+
     def add_data(self, mesh):
         self.data_container_list.append(mesh)
     
@@ -146,6 +149,7 @@ class RendererContainer():
 import ctypes 
 import  OpenGL.arrays.vbo as glvbo # For GL VAO VBO
 import sys
+from pyviewer import utils
 class Renderer2():
     def __init__(self, V, F, material):
         self.vertex = V.astype('float32')
@@ -160,7 +164,7 @@ class Renderer2():
 
         pass
         # glBindBuffer()
-    
+    @utils.print_time("mapping : {} {} {}")
     def mapping_index_to_face(self):
         reval = [[] for _ in range(len(self.vertex))]
         for v_idx in range(len(self.vertex)):
@@ -170,7 +174,7 @@ class Renderer2():
                        reval[v_idx].append(f_idx)
         return reval
         
-
+    @utils.print_time("calc_normal {} {} {}")
     def calc_normal_each_v(self, v_idx1, v_idx2, v_idx3):
         
         edge1 = self.vertex[v_idx2] - self.vertex[v_idx1]
@@ -179,6 +183,7 @@ class Renderer2():
         return normal_vector/np.linalg.norm(normal_vector)
 
 
+    @utils.print_time("calc_face_normal {} {} {}")
     def calc_face_normal(self):
         f_norms = []
         for indice in self.face : 
@@ -187,6 +192,7 @@ class Renderer2():
         
         return np.array(f_norms)
         
+    @utils.print_time("calc_vertex normal {} {} {}")
     def calc_vertex_normal(self):
         v_norms = []
         for v_idx in range(len(self.vertex)):
@@ -259,21 +265,34 @@ class Renderer2():
     def __del__(self):
         if hasattr(self, 'vbo'):
             glDeleteBuffers(1, self.vbo)
+    def change_vertex_data_all(self, v):
+        self.vertex = v.astype(np.float32)
+        
+        glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+        print(v.astype(np.float32).flatten().nbytes)
+        # glBufferSubData(GL_ARRAY_BUFFER, 4*(3+3) * idx, 4*3,v.flatten()) # edit vertex
+        glBufferSubData(GL_ARRAY_BUFFER, 0, v.flatten().nbytes,v.flatten()) # edit vertex
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+
+
 
     def change_vertex_data(self, v, idx):
         print(v)
         v = v.astype(np.float32)
         self.vertex[idx] = v
 
-        
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
         print(v.astype(np.float32).flatten().nbytes)
         # glBufferSubData(GL_ARRAY_BUFFER, 4*(3+3) * idx, 4*3,v.flatten()) # edit vertex
         glBufferSubData(GL_ARRAY_BUFFER, idx * 4 *(3+3), v.flatten().nbytes,v.flatten()) # edit vertex
         glBindBuffer(GL_ARRAY_BUFFER, 0)
+        
+
+        #TODO normal data need to be change
+        
 
     # @utils.print_time
-    def draw(self, *args, **kwargs):
+    def draw(self, selected_v_idx = [], *args, **kwargs):
 
 
         self.material()
@@ -302,6 +321,20 @@ class Renderer2():
         glDisableClientState(GL_VERTEX_ARRAY)
         glDisableClientState(GL_NORMAL_ARRAY)
         # glBindVertexArray(0)
+        qad = gluNewQuadric() 
+        for idx in selected_v_idx:
+            glDisable(GL_DEPTH_TEST)
+            glEnable(GL_COLOR_MATERIAL) 
+            glColor(1,0,0)
+            glTranslatef(*self.vertex[idx])
+            gluSphere(qad, .04, 10, 3)
+            glDisable(GL_COLOR_MATERIAL) 
+            glEnable(GL_DEPTH_TEST)
+
+
+
+
+        
         
 
 
@@ -336,14 +369,14 @@ class DataContainer():
         self.aabb.insert_entity(self.V, self.F)
         
 
-    def set_data(self, V, F):
+    def set_data(self, V):
         """ 
             Not Yet Implements
 
         """
         self.V = V
-        self.F = F
-        # raise NotImplementedError()
+        self.renderer.change_vertex_data_all(V)
+
         
     def picked_v_update(self, ray):
         idx = self.selected_v_idx[0]
@@ -403,7 +436,8 @@ class DataContainer():
         glRotatef(self.rot_y, 0, 1, 0)
         glRotatef(self.rot_x, 1, 0, 0)
         array = (GLfloat *16)()
-        self.renderer.draw(self.V, self.F, self.material, self.selected_v_idx)
+        # self.renderer.draw(self.V, self.F, self.material, self.selected_v_idx)
+        self.renderer.draw(self.selected_v_idx)
         glPopMatrix()
 
 

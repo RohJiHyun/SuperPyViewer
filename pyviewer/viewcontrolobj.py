@@ -1,3 +1,8 @@
+
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QOpenGLWidget, QTextEdit, QDockWidget, QListWidget)
+from PyQt5.QtCore import Qt
+
+from pyviewer import utils
 import numpy as np 
 from OpenGL.GL import * 
 from OpenGL.GLU import *
@@ -206,11 +211,6 @@ class RootWindow():
         self.cols = self.cols
     
 
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QOpenGLWidget, QTextEdit, QDockWidget, QListWidget)
-from PyQt5.QtCore import Qt
-
-from pyviewer import utils
-
 class Window(QOpenGLWidget):
     """
         Class Window Draw World. 
@@ -238,7 +238,9 @@ class Window(QOpenGLWidget):
         self.is_background_clicked = False #(It is bocome True if Point clicked)
         self.prev_mouse_pos = [0., 0.]
 
-        self.startTimer(10/6)
+        self.startTimer(100/6)
+        self.release_custom_func = self.add_mouse_motion_callback()
+        self.motion_custom_func = self.add_mouse_released_callback()
 
     def timerEvent(self, event):
         self.update()
@@ -251,48 +253,12 @@ class Window(QOpenGLWidget):
 
     def set_world(self, world):
         self.world = world
-    
-    # def get_ray(self, x, y):
-    #     print("sisisisisi size : ", )
-    #     return self.camera.get_ray(x,y, self.size().width(), self.size().height())
 
-    # def _set_xywh(self, x, y, width, height):
-    #     # glViewport(x,y,width, height)
-        
-    #     cond_function = lambda x : x > 0
-    #     def _set_attribute(x, func):
-    #         if func(x):
-    #             return x
-    #     width =  _set_attribute(width, cond_function )
-    #     height = _set_attribute(height, cond_function )
-    #     self.factor_width = 1 if self.width == -1 else width/self.width
-    #     self.factor_height = 1 if self.width == -1 else width/self.width
-    #     self.width =  _set_attribute(width, cond_function )
-    #     self.height = _set_attribute(height, cond_function )
-    #     self.x = _set_attribute(x, cond_function )
-    #     self.y = _set_attribute(y, cond_function )
-    # @utils.print_time
     def draw(self):
-        # glViewport(self.x, self.y, self.width, self.height)
-        # self.camera(self.factor_width, self.factor_height)
 
         self.camera(1,1)
         self.world.world_draw()
     
-    # def initialize_vertex_array(self):
-        
-    #     self.vbo = glvbo.VBO(np.array([1,2,3]))
-    #     self.vbo.bind()
-
-    #     glEnableClientState(GL_VERTEX_ARRAY)
-    #     glEnableClientState(GL_COLOR_ARRAY)
-
-    #     buffer_offset = ctypes.c_void_p
-    #     # stride = (3+3)*self.vertices.itemsize
-    #     stride = (3+3)*4
-    #     glVertexPointer(3, GL_FLOAT, stride, None)
-    #     glColorPointer(3, GL_FLOAT, stride, buffer_offset(12))
-    #     glBindVertexArray(0)
 
     def initializeGL(self):
         print("init")
@@ -313,21 +279,16 @@ class Window(QOpenGLWidget):
     def paintGL(self):
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        
+        self.proj()
+        # self.world.data_container_list[0].rotation_update(  0.2,  .2, 0 )
         self.draw()
         glFlush()
         
     def resizeGL(self, width, height):
-        # glViewport(0,0,width,height)
-        # array = (GLfloat *16)()
 
-        # glGetFloat(GL_MODELVIEW_MATRIX, array)
-        # mview = np.array(array).reshape(4,4).T
-        # print("eye to world : \n", mview)
         print("resize" , width, height)
         glViewport(0,0,width,height)
         self.proj.set_mode('ortho').set_aspect_ratio(width, height).set_angle(45.0).compile()
-        self.proj()
         
     def wheelEvent(self, e):
         y = e.angleDelta().y()
@@ -337,15 +298,13 @@ class Window(QOpenGLWidget):
         elif y < 0:
             
             self.proj.add_zoom(-0.1)
-        self.proj.compile()
-        print(self.proj)
-        self.proj()
+
         
 
     def mouseMoveEvent(self, pos):
         # picker.Picker.getxy(pos.x(), pos.y())
         # pass
-        limit_size = 100
+        limit_size = 10
         delta_rot_per_ratio = np.pi/2
         maximum_rotation = 90
         def convert_delta_pos_to_rot(delta_x, delta_y):
@@ -371,7 +330,7 @@ class Window(QOpenGLWidget):
                 self.prev_mouse_pos[0] = x 
                 x_rot, y_rot = convert_delta_pos_to_rot(delta_x, delta_y)
             else : 
-                delta_x = 1
+                delta_x = 0
                 x_rot = 0
             
 
@@ -379,7 +338,7 @@ class Window(QOpenGLWidget):
                 self.prev_mouse_pos[1] = y
                 x_rot, y_rot = convert_delta_pos_to_rot(delta_x, delta_y)
             else :
-                delta_y = 1
+                delta_y = 0
                 y_rot = 0
             
             delta_x_ratio = delta_x / self.size().width() 
@@ -389,7 +348,9 @@ class Window(QOpenGLWidget):
             y_rot = delta_y_ratio * maximum_rotation
 
             # self.world.data_container_list[0].rotation_update((delta_x / abs(delta_x)) * x_rot, (delta_y / abs(delta_y)) * y_rot, 0 )
-            print("y_rot{}, x_rot{}".format(x_rot, y_rot))
+            str1 = "delta_x {}/ width {} = ratio x{}  ".format(delta_x, self.size().width(), delta_x_ratio)
+            str2 = "delta_y {} / height {} = ratio y {}".format(delta_y, self.size().height(), delta_y_ratio)
+            print(str1 + str2)
             self.world.data_container_list[0].rotation_update(  y_rot,  x_rot, 0 )
 
         elif self.is_mouse_pressed and not self.is_background_clicked:
@@ -400,28 +361,7 @@ class Window(QOpenGLWidget):
 
     
     def mousePressEvent(self, pos):
-# <<<<<<< Updated upstream
-#         import operator
-#         # ray_near, ray_far = picker.Picker.getxy(pos.x(), pos.y())
-#         # print(picker.Picker.getxy(pos.x(), pos.y()))
-#         # # self.is_mouse_pressed = True
-#         # # ray = self.get_ray(pos.x(), pos.y())
-#         # # fid, b_coord, closest_v_idx, t = self.world.data_container_list[0].query_ray(ray)
-#         # # fid, b_coord, closest_v_idx, t =  picker.Picker.pick(pos.x(), pos.y(),self.size().width(), self.size().height(), self.world.data_container_list[0])
-#         # # if fid == -1 : 
-#         # #     self.is_background_clicked = True
-#         # #     return 
-        
-#         # # self.world.data_container_list[0].selected_v_idx.append(closest_v_idx)
-#         # // per-vertex
-#         # for (int i = 0; i < num_vertice; i++){
-#         lengths = []
-#         for i, vertex in enumerate(self.world.data_container_list[0].V):
-            
-#             near, far = picker.Picker.get_near_far(pos.x(), pos.y())
-#             length = picker.Picker.pointToLineDistance3D(near, far, vertex)
-#             lengths.append((length, i))
-# =======
+
         self.is_mouse_pressed = True
         from pyviewer import picker
         # ray = self.get_ray(pos.x(), pos.y())
@@ -445,6 +385,37 @@ class Window(QOpenGLWidget):
         self.prev_mouse_pos[1] = -1
         
         self.world.data_container_list[0].selected_v_idx.clear()
+        self.release_custom_func()
+
+
+
+    def add_mouse_released_callback(self, function = None):
+        
+        if function == None :
+            def wrapper():
+                pass
+        else:
+            def wrapper():
+                V = self.world.world.data_container_list[0].V
+                F = self.world.world.data_container_list[0].F
+                newv, newf = function(V, F)
+                self.world.self.world.data_container_list[0].set_data(newv)
+        self.release_custom_func = wrapper
+
+
+
+
+    def add_mouse_motion_callback(self, function = None):
+        if function == None :
+            def wrapper():
+                pass
+        else:
+            def wrapper():
+                V = self.world.world.data_container_list[0].V
+                F = self.world.world.data_container_list[0].F
+                newv, newf = function(V, F)
+                self.world.self.world.data_container_list[0].set_data(newv)
+        self.motion_custom_func = wrapper
 
 
 
@@ -481,6 +452,9 @@ class Projection():
         self.right = 1
 
         self.zoom = 0.0
+        self.zoom_min = 0.1
+        self.zoom = 1.0
+        
 
     def set_width(self, left, right):
         self.right = right 
@@ -507,9 +481,11 @@ class Projection():
              + Zoom in
              - Zoom out
         """
-
         self.zoom += ratio
-        print(self.zoom)
+        if self.zoom < self.zoom_min  :
+            self.zoom = self.zoom_min
+        
+        
 
     
 
@@ -539,23 +515,24 @@ class Projection():
 
     def _wrap_proj(self):
         def wrap_func():
+
+            
+
             if self.mode == Projection.ORTHGONAL_MODE : 
+                left = (self.left/ self.zoom) 
+                right = (self.right / self.zoom)
+                top = self.top / self.zoom
+                bottom = self.bottom / self.zoom
+                # print("left {}, right {}, top {}, bottom {}".format(left, right, top, bottom))
+
                 if self.aspect > 1:
-                    glOrtho((self.left - self.zoom)*  self.aspect , (self.right + self.zoom) * self.aspect ,\
-                            self.bottom , self.top ,\
+                    glOrtho( left * self.aspect, right * self.aspect,\
+                            bottom, top,\
                             self.near, self.far)
-                    print("work")
-                # glOrtho(self.left *self.width_factor, self.right *self.width_factor,\
-                #         self.bottom *self.height_factor , self.top *self.height_factor,\
-                #         self.near, self.far)
                 else : 
-                    # glOrtho(self.left - self.zoom, self.right + self.zoom,\
-                    #         (self.bottom - self.zoom) / self.aspect  , (self.top + self.zoom) / self.aspect - self.zoom,\
-                    #         self.near, self.far)
-                    glOrtho(self.left /2, self.right/2,\
-                            self.bottom /2   , self.top /2,\
+                    glOrtho(left , right,\
+                            bottom / self.aspect, top / self.aspect,\
                             self.near, self.far)
-                    print("work 2")
             elif self.mode == Projection.PERSPECTIVE_MODE:
                 gluPerspective(45.0, self.aspect, 1., 100.)
             

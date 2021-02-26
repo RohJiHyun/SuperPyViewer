@@ -30,10 +30,13 @@ from pyviewer import viewcontrolobj as vco
 
 from pyviewer import controller, data_model
 
+QApplication.setAttribute(Qt.AA_UseDesktopOpenGL)
 
+app = QApplication(sys.argv)
 
 class CustomViewer(QMainWindow):
     def __init__(self, title, width, height):
+
         super().__init__()
         self.resize(width, height)
         # self.layout = BorderLayout()
@@ -90,6 +93,7 @@ class CustomViewer(QMainWindow):
     
 
     def run(self):
+
         self.show()
     
 
@@ -112,9 +116,7 @@ if __name__ == "__main__":
     # a.add_mouse_motion_callback(test_mouse_motion)
     # a.launch()
 if __name__ == '__main__':
-    QApplication.setAttribute(Qt.AA_UseDesktopOpenGL)
-
-    app = QApplication(sys.argv)
+    
     window = CustomViewer("hee", 800,900)
     window.set_data(V,F)
     window.compile()
