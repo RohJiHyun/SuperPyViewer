@@ -271,13 +271,14 @@ class Renderer2():
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
         print(v.astype(np.float32).flatten().nbytes)
         # glBufferSubData(GL_ARRAY_BUFFER, 4*(3+3) * idx, 4*3,v.flatten()) # edit vertex
-        glBufferSubData(GL_ARRAY_BUFFER, 0, v.flatten().nbytes,v.flatten()) # edit vertex
+        for idx, v in enumerate(self.vertex):
+            glBufferSubData(GL_ARRAY_BUFFER, 4*(3+3)* idx , v.flatten().nbytes,v.flatten()) # edit vertex
+
         glBindBuffer(GL_ARRAY_BUFFER, 0)
 
 
 
     def change_vertex_data(self, v, idx):
-        print(v)
         v = v.astype(np.float32)
         self.vertex[idx] = v
 
@@ -289,6 +290,9 @@ class Renderer2():
         
 
         #TODO normal data need to be change
+
+
+
         
 
     # @utils.print_time

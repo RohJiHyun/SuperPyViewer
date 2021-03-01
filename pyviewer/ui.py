@@ -25,8 +25,8 @@ BASE_INSPECTER = {
                     "vertice"                : [{"widget" : QLabel, "args" : ["0"]}],
                     "face"                   : [{"widget" : QLabel, "args" : ["0"]}],
                     "selected vertex number" : [{"widget" : QLabel, "args" :["None"]}],
-                    "sharable"               : [{"widget" : QComboBox, "args" :[]}]
-
+                    "sharable"               : [{"widget" : QComboBox, "args" :[]}],
+                    "custom function"        : [{"widget" : QPushButton, "args" : ["active custom func"]}]
 
                  }
 
@@ -40,9 +40,9 @@ STATUS_BAR = {
 
 
 
-class BaseUI():
+class BaseUI(QWidget):
     def __init__(self, parent):
-        # super().__init__(parent=parent)
+        super().__init__()
         self.parent = parent
         self.mapping_table = dict()
 
@@ -175,11 +175,5 @@ class InspectorUI(BaseInspectorUI):
         self.set_size_constraint(layout)
 
         return QLabel(key), layout
-
-
-
-    def add_custom_button(self, bttn_str = "ex"):
-
-        pass
 
 

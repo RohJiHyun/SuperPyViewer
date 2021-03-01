@@ -3,7 +3,7 @@
 
 
 class UIController():
-    def __init__(self, root_view, model):
+    def __init__(self, ui_view, model):
         pass
 
     def compile(self):
@@ -14,13 +14,25 @@ class UIController():
 
 
 class InspectorController():
-    def __init__(self, inspector, world):
+    def __init__(self, glviewer, inspector, data_model):
+        
+        """
+            inspector : ui that inherit BaseInspect
+            model :  data model .world container
+        """
+        
         self.inspector = inspector
+        self.model  = model
+
+
 
 
     def compile(self):
         self._extract_ui()
         self._connect_to_world()
+
+        return self
+
 
     def _extract_ui(self):
         #rotation
@@ -39,7 +51,7 @@ class InspectorController():
         # self.rot_x.textChanged.connect()
         # self.rot_y
         # self.rot_z
-        pass
+        self.rot_x.connect()
     
 
 

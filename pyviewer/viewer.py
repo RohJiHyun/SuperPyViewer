@@ -34,6 +34,11 @@ QApplication.setAttribute(Qt.AA_UseDesktopOpenGL)
 
 app = QApplication(sys.argv)
 
+
+
+import pyviewer.controller as ct 
+import pyviewer.data_model as dmodel
+
 class CustomViewer(QMainWindow):
     def __init__(self, title, width, height):
 
@@ -79,22 +84,33 @@ class CustomViewer(QMainWindow):
         # self.data.append( (V,F))
         self.world.add_data(dc.DataContainer(V, F))
         
-    def compile(self):
+    def compile(self, total_view = 1):
         self._initialize_mainview()
+        # self.initUI()
 
-        self.initUI()
+        
 
+        
+        # ct.InspectorController(self.win, self.Inspector, dmodel.)
+    
 
     def _initialize_mainview(self):
-        win = vco.Window("tit")
-        win.set_world(self.world)
-        self.add_window(win, isdock=True, name=win.name, central=True)
+        self.win = vco.Window("tit")
+        self.win.set_world(self.world)
+        self.add_window(self.win, isdock=True, name=self.win.name, central=True)
         
     
 
     def run(self):
-
+                
         self.show()
+
+
+    def add_picking_function(self, f):
+        """
+            function args : V, F
+        """
+        self.win.add_mouse_released_callback(f)
     
 
     # def mouseMoveEvent(self, pos):
@@ -116,10 +132,14 @@ if __name__ == "__main__":
     # a.add_mouse_motion_callback(test_mouse_motion)
     # a.launch()
 if __name__ == '__main__':
-    
+
     window = CustomViewer("hee", 800,900)
     window.set_data(V,F)
-    window.compile()
+    window.compile(2)
+    window.add_picking_function(lambda x, y : (None, None))
     window.run()
+
+
+
 
     sys.exit(app.exec_())

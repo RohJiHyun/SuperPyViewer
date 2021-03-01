@@ -383,9 +383,10 @@ class Window(QOpenGLWidget):
         self.is_background_clicked = False
         self.prev_mouse_pos[0] = -1
         self.prev_mouse_pos[1] = -1
-        
+        if self.world.data_container_list[0].selected_v_idx:
+            self.release_custom_func()
         self.world.data_container_list[0].selected_v_idx.clear()
-        self.release_custom_func()
+        
 
 
 
@@ -396,10 +397,10 @@ class Window(QOpenGLWidget):
                 pass
         else:
             def wrapper():
-                V = self.world.world.data_container_list[0].V
-                F = self.world.world.data_container_list[0].F
+                V = self.world.data_container_list[0].V
+                F = self.world.data_container_list[0].F
                 newv, newf = function(V, F)
-                self.world.self.world.data_container_list[0].set_data(newv)
+                self.world.data_container_list[0].set_data(newv)
         self.release_custom_func = wrapper
 
 
