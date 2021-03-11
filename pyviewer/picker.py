@@ -112,6 +112,7 @@ class Picker():
         print("old p", old_p)
         # new_p = np.linalg.norm(old_p-ray_near)*(ray_far-ray_near)/np.linalg.norm(ray_far-ray_near) + ray_near
         old_vec = old_p-ray_near
+        # new_vec = ray_far-ray_near
         new_vec = ray_far-ray_near
         # t_size = old_vec.dot(new_vec)/(np.linalg.norm(new_vec))
         t_size = old_vec.dot(ray_far)/(np.linalg.norm(ray_far))

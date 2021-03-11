@@ -18,12 +18,15 @@ from pyviewer import AABB
 
 class Light():
     def __init__(self):
-        self.position = [0.0, 0.0, 1.0, 0.0]
+        self.position = [1,1,1]
         self.direcion = [0., 1., 0.]
-        self.set_ambient([1.0, 1.0, 1.0, 0.0])
+        self.set_ambient([0.,0.0,0.0, 1.0])
+        self.set_ambient([0.0, 0.0, 0.0, 1.0])
         # self.set_ambient([0.0, 0.0, 0.0, 0.0])
-        self.set_diffuse([1.0, 1.0, 1.0, 0.0])
-        self.set_specular([1.0, 1.0, 1.0, 0.0])
+        self.set_diffuse([0.7,0.7,0.7,0.0])
+        self.set_specular([0.7,0.7,0.7, 0.0])
+        self.set_specular([0.0,0.0,0.0, 0.0])
+
 
         self.set_coeff()
 
@@ -49,35 +52,49 @@ class Light():
         return self
     
     def initialize(self):
-        glClearColor(0.,0.,0.,0.)
-        glClearDepth(1.0)
-        glShadeModel(GL_FLAT)
-        glShadeModel(GL_SMOOTH)
-        glEnable(GL_CULL_FACE)
-        glFrontFace(GL_CCW)
-        glEnable(GL_NORMALIZE)
+
+        # glEnable(GL_NORMALIZE)
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_LIGHTING)
-        
-        glEnable(GL_LIGHT0)
+        glClearColor(0.,0.,0.,0.)
+        glClearDepth(1.0)
+        # glShadeModel(GL_SMOOTH)
+        # glEnable(GL_CULL_FACE)
+        # glFrontFace(GL_CCW)
+        # glCullFace(GL_FRONT)
 
+
+
+
+        
+        # glEnable(GL_LIGHT0)
+    
+    def enable(self):
+        
+
+        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, [0.7,0.7,0.7,1.0])
         glLightfv(GL_LIGHT0, GL_AMBIENT, self.ambient)
         glLightfv(GL_LIGHT0, GL_DIFFUSE, self.diffuse)
         glLightfv(GL_LIGHT0, GL_SPECULAR, self.specular)
-        glLightfv(GL_LIGHT0, GL_POSITION, self.position)
-
-    
-    def __call__(self):
-        pass
+        # glLightfv(GL_LIGHT0, GL_POSITION, self.position)
+        glLight(GL_LIGHT0, GL_POSITION, self.position)
+        glEnable(GL_LIGHTING)
+        glEnable(GL_LIGHT0)
+    def disable(self):
+        glDisable(GL_LIGHT0)
+        glDisable(GL_LIGHTING)
 
 class Material():
     def __init__(self):
-        self.set_ambient([0.4,0.4,0.4 , 0.0])
-        # self.set_ambient([1., 1. , 1. , 0.0])
-        self.set_diffuse([0. , 0, 0., 0.0])
-        self.set_specular([0.3, 0.3, 0.3, 0.0])
+        self.set_ambient([1., 1. , 1. , 0.0])
+        self.set_ambient([0.4,0.4,0.4 , 1.0])
+        self.set_diffuse([0.5 , 0.5, 0.5, 1.0])
+        self.set_diffuse([0.7,0.7,0.7, 1.0])
+        self.set_diffuse([1,1,1, 0.0])
+        self.set_specular([0.3, 0.3, 0.3, 1.0])
+        self.set_specular([0,0,0, 0.0])
         self.set_emission([0.0, 0.0, 0.0, 0.0])
-        self.set_shininess([1.0])
+        self.set_shininess([128])
 
     def set_ambient(self, ambient):
         self.ambient = ambient
@@ -107,13 +124,15 @@ class Material():
         
 
         glDisable(GL_COLOR_MATERIAL)        
-        # glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, self.ambient + self.diffuse)
         # glEnable(GL_COLOR_MATERIAL)
+        # glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, self.ambient + self.diffuse)
+        # glColorMaterial(GL_FRONT , GL_AMBIENT_AND_DIFFUSE)
         glMaterialfv(GL_FRONT, GL_AMBIENT, self.ambient)
         glMaterialfv(GL_FRONT, GL_DIFFUSE, self.diffuse)
         glMaterialfv(GL_FRONT, GL_SPECULAR, self.specular)
-        glMaterialfv(GL_FRONT, GL_SHININESS, self.shininess)
-        glMaterialfv(GL_FRONT, GL_EMISSION, self.emission)
+        glMateriali(GL_FRONT, GL_SHININESS, 128)
+        # glColor(0.7,0.7,0.7)
+        # glMaterialfv(GL_FRONT, GL_EMISSION, self.emission)
         # glEnable(GL_COLOR_MATERIAL)
 
         #anti aliasing
@@ -231,11 +250,17 @@ class Window(QOpenGLWidget):
         self.height = -1.
 
 
+
+        
+        self.fixed_point_add_flag = False
+
         self.factor_height = 1.0
         self.factor_width = 1.0
 
         self.is_mouse_pressed = False
         self.is_background_clicked = False #(It is bocome True if Point clicked)
+        self.mouse_moved = False
+        self.pick_idx = -1
         self.prev_mouse_pos = [0., 0.]
 
         self.startTimer(100/6)
@@ -286,17 +311,14 @@ class Window(QOpenGLWidget):
         
     def resizeGL(self, width, height):
 
-        print("resize" , width, height)
         glViewport(0,0,width,height)
         self.proj.set_mode('ortho').set_aspect_ratio(width, height).set_angle(45.0).compile()
         
     def wheelEvent(self, e):
         y = e.angleDelta().y()
         if y > 0:
-            
             self.proj.add_zoom(0.1)
         elif y < 0:
-            
             self.proj.add_zoom(-0.1)
 
         
@@ -315,17 +337,17 @@ class Window(QOpenGLWidget):
             y_rot = (abs(delta_y)/self.height )*6*np.pi
             return x_rot, y_rot
 
-
-
-        if self.is_mouse_pressed and self.is_background_clicked : 
+        def assign_delta():
             x = pos.x()
             y = pos.y()
+            
             if self.prev_mouse_pos[0] == -1 and self.prev_mouse_pos[1] == -1:
                 self.prev_mouse_pos[0] = x
                 self.prev_mouse_pos[1] = y
 
-            delta_x = x  - self.prev_mouse_pos[0]
-            delta_y =  y - self.prev_mouse_pos[1]
+            delta_x = x - self.prev_mouse_pos[0]
+            delta_y = y - self.prev_mouse_pos[1]
+            
             if abs(delta_x) > limit_size :
                 self.prev_mouse_pos[0] = x 
                 x_rot, y_rot = convert_delta_pos_to_rot(delta_x, delta_y)
@@ -341,21 +363,26 @@ class Window(QOpenGLWidget):
                 delta_y = 0
                 y_rot = 0
             
+            return delta_x, delta_y, x_rot, y_rot
+
+        delta_x, delta_y, x_rot,y_rot = assign_delta()
+
+        if self.is_mouse_pressed and self.is_background_clicked : 
+
             delta_x_ratio = delta_x / self.size().width() 
             delta_y_ratio = delta_y / self.size().height()
 
             x_rot = delta_x_ratio * maximum_rotation 
             y_rot = delta_y_ratio * maximum_rotation
 
-            # self.world.data_container_list[0].rotation_update((delta_x / abs(delta_x)) * x_rot, (delta_y / abs(delta_y)) * y_rot, 0 )
-            str1 = "delta_x {}/ width {} = ratio x{}  ".format(delta_x, self.size().width(), delta_x_ratio)
-            str2 = "delta_y {} / height {} = ratio y {}".format(delta_y, self.size().height(), delta_y_ratio)
-            print(str1 + str2)
             self.world.data_container_list[0].rotation_update(  y_rot,  x_rot, 0 )
 
-        elif self.is_mouse_pressed and not self.is_background_clicked:
-            self.world.data_container_list[0].picked_v_update(picker.Picker.get_ray(pos.x(), pos.y(), self.size().width(), self.size().height(), self.proj.mat, self.camera.mat))
-
+        elif self.is_mouse_pressed and not self.is_background_clicked :
+            if delta_y == 0 and delta_x == 0: 
+                self.mouse_moved = False
+            else : 
+                self.world.data_container_list[0].picked_v_update(picker.Picker.get_ray(pos.x(), pos.y(), self.size().width(), self.size().height(), self.proj.mat, self.camera.mat))
+                self.mouse_moved = True
 
 
 
@@ -376,17 +403,45 @@ class Window(QOpenGLWidget):
             return 
         print("closest v idx", closest_v_idx)
         print(self.world.data_container_list[0].V[closest_v_idx])
-        self.world.data_container_list[0].selected_v_idx.append(closest_v_idx)
+        
+        self.pick_idx = closest_v_idx
+        
+        
+        
+        if self.world.data_container_list[0].check_idx_exists(self.pick_idx, search_space='all'):
+            if self.fixed_point_add_flag : 
+                self.world.data_container_list[0].add_point(self.pick_idx, fixed=True)
+            else :
+                self.world.data_container_list[0].add_point(self.pick_idx, fixed=False)
 
+        # self.world.data_container_list[0].selected_v_idx.append()
+    
+ 
     def mouseReleaseEvent(self, pos):
         self.is_mouse_pressed = False 
         self.is_background_clicked = False
         self.prev_mouse_pos[0] = -1
         self.prev_mouse_pos[1] = -1
-        if self.world.data_container_list[0].selected_v_idx:
+        if self.world.data_container_list[0].selected_v_idx and self.mouse_moved :
             self.release_custom_func()
-        self.world.data_container_list[0].selected_v_idx.clear()
-        
+
+
+        if self.mouse_moved == False and self.pick_idx != -1: 
+            if self.world.data_container_list[0].check_idx_exists(self.pick_idx):
+                if self.fixed_point_add_flag : 
+                    self.world.data_container_list[0].remove_point(self.pick_idx, fixed=True)
+                else : 
+                    self.world.data_container_list[0].remove_point(self.pick_idx, fixed=False)
+            else:
+                if self.fixed_point_add_flag : 
+                    self.world.data_container_list[0].add_point(self.pick_idx, fixed=True)
+                else :
+                    self.world.data_container_list[0].add_point(self.pick_idx, fixed=False)
+            
+            
+        self.pick_idx = -1
+        self.mouse_moved = False
+        print(self.world.data_container_list[0].selected_v_idx)
 
 
 
@@ -417,10 +472,6 @@ class Window(QOpenGLWidget):
                 newv, newf = function(V, F)
                 self.world.self.world.data_container_list[0].set_data(newv)
         self.motion_custom_func = wrapper
-
-
-
-    
 
 
 
